@@ -12,8 +12,5 @@ jobs:
       with:
         node-version: '18.x'
     - uses: gauron99/gh-action@main
-      with:
-        who-to-greet: "Your Majesty"
-        version: 1.17
 
 

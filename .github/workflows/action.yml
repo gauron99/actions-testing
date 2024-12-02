@@ -3,6 +3,7 @@ on: workflow_dispatch
 
 jobs:
   meet-greet:
+    runs-on: ubuntu-latest
     steps:
     - uses: gauron99/gh-action@main
       with:

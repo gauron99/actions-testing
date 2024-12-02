@@ -5,12 +5,6 @@ jobs:
   meet-greet:
     runs-on: ubuntu-latest
     steps:
-    - name: checkout repo
-      uses: actions/checkout@v3
-    - name: use node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18.x'
     - uses: gauron99/gh-action@main
 
 

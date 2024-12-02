@@ -1,0 +1,11 @@
+name: "Big testing"
+on: workflow_dispatch
+
+jobs:
+  meet-greet:
+    uses: https://github.com/gauron99/gh-action
+    with:
+      who-to-greet: "Your Majesty"
+      version: 1.17
+
+

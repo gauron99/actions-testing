@@ -6,6 +6,6 @@ jobs:
     uses: https://github.com/gauron99/gh-action
     with:
       who-to-greet: "Your Majesty"
-      version: 1.17
+      version: "1.17"
 
 

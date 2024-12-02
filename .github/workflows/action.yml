@@ -1,13 +1,11 @@
 name: "Big testing"
-on: 
-  workflow_dispatch:
+on: workflow_dispatch
 
 jobs:
-  my-func:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: gauron99/knative-func-action@main
-      with:
-          version: 'knative-v1.18.0'
-    - run: func version
+  meet-greet:
+    uses: https://github.com/gauron99/gh-action
+    with:
+      who-to-greet: "Your Majesty"
+      version: 1.17
+
 

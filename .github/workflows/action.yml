@@ -3,7 +3,7 @@ on: workflow_dispatch
 
 jobs:
   meet-greet:
-    uses: gauron99/gh-action@0.0.1
+    uses: gauron99/gh-action@0.0.2
     with:
       who-to-greet: "Your Majesty"
       version: 1.17

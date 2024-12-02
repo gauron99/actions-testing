@@ -6,6 +6,6 @@ jobs:
     uses: gauron99/gh-action@0.0.1
     with:
       who-to-greet: "Your Majesty"
-      version: "1.17"
+      version: 1.17
 
 

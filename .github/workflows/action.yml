@@ -1,5 +1,7 @@
 name: "Big testing"
-on: workflow_dispatch
+on: 
+  workflow_dispatch:
+  push:
 
 jobs:
   meet-greet:

@@ -4,9 +4,8 @@ on:
   push:
 
 jobs:
-  meet-greet:
+  my-func:
     runs-on: ubuntu-latest
     steps:
     - uses: gauron99/gh-action@main
-
 

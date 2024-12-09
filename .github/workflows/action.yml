@@ -8,5 +8,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: gauron99/gh-action@main
-    - run: ./func_linux_amd64 --version
+    - run: ./func_linux_amd64 version
 

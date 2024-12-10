@@ -7,6 +7,6 @@ jobs:
   my-func:
     runs-on: ubuntu-latest
     steps:
-    - uses: gauron99/gh-action@main
+    - uses: gauron99/knative-func-action@main
     - run: func version
 

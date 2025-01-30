@@ -18,5 +18,6 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       run: |
         pwd
-        cd go-scripts && go run fetch-knative-hack.go
+        ls -l
+        cd go-scripts && pwd && go run fetch-knative-hack.go
 

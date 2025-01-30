@@ -147,7 +147,7 @@ func main() {
 		},
 		{
 			owner: "knative-extensions",
-			repo:  "net-concour",
+			repo:  "net-contour",
 		},
 	}
 	var err error

@@ -21,8 +21,6 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Println("good")
-
-	fmt.Printf("content: %#v\n", c)
-	fmt.Printf("name:%v,id:%v\n", c.Name, c.ID)
+	fmt.Printf("name:%v,id:%v\n", *c.Name, *c.ID)
 
 }

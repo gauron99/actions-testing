@@ -34,7 +34,7 @@ func getLatestVersion(ctx context.Context, client *github.Client, owner string, 
 	return v, nil
 }
 
-// read the allocate.sh file where serving and eventing versions are
+// read the ib.sh file where serving and eventing versions are
 // located. Read that file to find them via prefix above. Fetch their version
 // and return them in 'v1.23.0' format. (To be compared with the current latest)
 func getVersionsFromFile() (srv string, evt string, cnr string, err error) {
@@ -42,7 +42,7 @@ func getVersionsFromFile() (srv string, evt string, cnr string, err error) {
 	evt = "" //eventing
 	cnr = "" //net-concour (knative-extensions)
 
-	var f = "allocate.sh"
+	var f = "hack/ib.sh"
 
 	file, err := os.OpenFile(f, os.O_RDWR, 0600)
 	if err != nil {

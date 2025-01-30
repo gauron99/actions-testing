@@ -11,7 +11,7 @@ import (
 )
 
 func getVersionFromFile() (srv string, evt string, err error) {
-	f := "go-scripts/ib.sh"
+	f := "ib.sh"
 	readFile, err := os.Open(f)
 	if err != nil {
 		err = fmt.Errorf("cant open file '%s': %v", f, err)

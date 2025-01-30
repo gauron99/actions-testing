@@ -11,8 +11,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-go@v4
+    - name: go mod
+      run: go mod
     - name: Create PR
       env:
         GITHUB_TOKEN: ${{ github.token }}
-      run: go run ./go-scripts/fetch-knative-hack.go
+      run: cd go-scripts && go run fetch-knative-hack.go
 

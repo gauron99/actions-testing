@@ -1,11 +1,6 @@
 name: testing knative hack dir thing
 
-permissions:
-  contents: write
-  pull-requests: write
-
 on: [workflow_dispatch,push]
-
 
 jobs:
   update:

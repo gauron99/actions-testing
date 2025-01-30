@@ -1,7 +1,6 @@
 name: "Big testing"
 on: 
   workflow_dispatch:
-  push:
 
 jobs:
   my-func:

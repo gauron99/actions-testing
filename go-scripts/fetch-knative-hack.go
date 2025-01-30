@@ -21,7 +21,7 @@ func getVersionFromFile() (srv string, evt string, err error) {
 	fs := bufio.NewScanner(readFile)
 	fs.Split(bufio.ScanLines)
 	for fs.Scan() {
-		line := fs.Text()
+		line := strings.TrimSpace(fs.Text())
 		fmt.Println(line)
 		if strings.HasPrefix(line, "local kn_serving") {
 			srv = "v" + strings.Split(line, "=")[1]

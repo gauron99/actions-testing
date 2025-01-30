@@ -20,13 +20,14 @@ var (
 
 // get latest version of owner/repo via GH API
 func getLatestVersion(ctx context.Context, client *github.Client, owner string, repo string) (v string, err error) {
+	fmt.Printf("get latest repo %s/%s\n", owner, repo)
 	rr, res, err := client.Repositories.GetLatestRelease(ctx, owner, repo)
 	if err != nil {
-		err = fmt.Errorf("error: Return status code of request for latest serving release is %d", res.StatusCode)
+		err = fmt.Errorf("error: request for latest %s release: %v", owner+"/"+repo, err)
 		return
 	}
 	if res.StatusCode < 200 && res.StatusCode > 299 {
-		err = fmt.Errorf("error: Return status code of request for latest eventing release is %d", res.StatusCode)
+		err = fmt.Errorf("error: Return status code of request for latest %s release is %d", owner+"/"+repo, res.StatusCode)
 		return
 	}
 	v = *rr.Name

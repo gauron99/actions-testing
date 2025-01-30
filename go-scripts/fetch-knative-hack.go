@@ -22,6 +22,7 @@ func getVersionFromFile() (srv string, evt string, err error) {
 	fs.Split(bufio.ScanLines)
 	for fs.Scan() {
 		line := fs.Text()
+		fmt.Println(line)
 		if strings.HasPrefix(line, "local kn_serving") {
 			srv = "v" + strings.Split(line, "=")[1]
 		} else if strings.HasPrefix(line, "local kn_eventing") {

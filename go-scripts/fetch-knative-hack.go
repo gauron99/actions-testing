@@ -5,13 +5,26 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	github "github.com/google/go-github/v68/github"
 )
 
 func getVersionFromFile() (srv string, evt string, err error) {
-	f := "./go-scripts/ib.sh"
+	cmd := exec.Command("/bin/sh", "pwd")
+	c, err := cmd.Output()
+	if err != nil {
+		return
+	}
+	fmt.Printf("pwd %v\n", c)
+	cmd = exec.Command("/bin/sh", "ls -l")
+	c, err = cmd.Output()
+	fmt.Printf("ls-l %v\n", c)
+	if err != nil {
+		return
+	}
+	f := "go-scripts/ib.sh"
 	readFile, err := os.Open(f)
 	if err != nil {
 		err = fmt.Errorf("cant open file '%s': %v", f, err)

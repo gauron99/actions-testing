@@ -4,7 +4,7 @@
   local helm_version=3.12.0
   local stern_version=1.25.0
   local kn_version=1.13.0
-  local jq_version=1.7.1
+local jq_version=1.7.1
 
-	local kn_serving=1.16.0
-	local kn_eventing=1.16.0
+local kn_serving=1.16.0
+local kn_eventing=1.16.0

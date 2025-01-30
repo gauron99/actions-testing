@@ -31,6 +31,9 @@ func getLatestVersion(ctx context.Context, client *github.Client, owner string, 
 		return
 	}
 	v = *rr.Name
+	if v == "" {
+		return "", fmt.Errorf("error: returned latest release name is empty for '%s'", repo)
+	}
 	return v, nil
 }
 
@@ -107,7 +110,7 @@ func tryUpdateFile(upstreams []struct{ owner, repo, version string }) (updated b
 				fmt.Printf("update eventing from '%s' to '%s'\n", oldEvt, upstream.version)
 				cmd = exec.Command("sed", "-i", "-e", "s/"+knEvtPrefix+oldEvt+"/"+knEvtPrefix+upstream.version+"/g", file)
 			}
-		case "concour":
+		case "net-contour":
 			if upstream.version != oldCnr {
 				fmt.Printf("update concour from '%s' to '%s'\n", oldCnr, upstream.version)
 				cmd = exec.Command("sed", "-i", "-e", "s/"+knCnrPrefix+oldCnr+"/"+knCnrPrefix+upstream.version+"/g", file)
@@ -157,6 +160,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "error while getting latest v of %s/%s: %v\n", p.owner, p.repo, err)
 			os.Exit(1)
 		}
+
 	}
 
 	updated, err := tryUpdateFile(projects)

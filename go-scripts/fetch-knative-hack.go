@@ -48,6 +48,7 @@ func main() {
 	}
 	srv, evt, err := getVersionFromFile()
 	if err != nil {
+		fmt.Fprint(os.Stderr, err)
 		os.Exit(1)
 	}
 	fmt.Printf("current version in file: srv=%s, evt=%s\n", srv, evt)

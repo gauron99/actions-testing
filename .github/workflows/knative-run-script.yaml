@@ -16,5 +16,7 @@ jobs:
     - name: Create PR
       env:
         GITHUB_TOKEN: ${{ github.token }}
-      run: cd go-scripts && go run fetch-knative-hack.go
+      run: |
+        pwd
+        cd go-scripts && go run fetch-knative-hack.go
 

@@ -11,7 +11,7 @@ import (
 )
 
 func getVersionFromFile() (srv string, evt string, err error) {
-	f := "./ib.sh"
+	f := "./go-scripts/ib.sh"
 	readFile, err := os.Open(f)
 	if err != nil {
 		err = fmt.Errorf("cant open file '%s': %v", f, err)
@@ -48,7 +48,7 @@ func main() {
 	}
 	srv, evt, err := getVersionFromFile()
 	if err != nil {
-		fmt.Fprint(os.Stderr, err)
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 	fmt.Printf("current version in file: srv=%s, evt=%s\n", srv, evt)

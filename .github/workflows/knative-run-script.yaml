@@ -1,21 +1,20 @@
 name: testing knative hack dir thing
 
+permissions:
+  contents: write
+  pull-requests: write
 
-on:
-  workflow_dispatch:
+on: workflow_dispatch
 
 jobs:
   update:
     name: Fetch me latest
-    runs-on: ubuntu-latest
+    runs-on: ubuntu
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-go@v4
-      with:
-        go-version: 1.23.4
     - name: Create PR
       env:
         GITHUB_TOKEN: ${{ github.token }}
-      run: |
-        cd go-scripts && go run ./fetch-knative-hack.go
+      run: go run ./go-scripts/fetch-knative-latest.go
 

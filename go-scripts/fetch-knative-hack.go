@@ -83,7 +83,7 @@ func getVersionsFromFile() (srv string, evt string, cnr string, err error) {
 // Update version in file if new releases of eventing/serving/net-concour exist
 // if applicable.
 func tryUpdateFile(upstreams []struct{ owner, repo, version string }) (updated bool, err error) {
-	file := "hack/allocate.sh"
+	file := "hack/ib.sh"
 	updated = false
 
 	// get current versions used. Get all together to limit opening/closing
@@ -118,7 +118,7 @@ func tryUpdateFile(upstreams []struct{ owner, repo, version string }) (updated b
 		}
 		err = cmd.Run()
 		if err != nil {
-			return false, fmt.Errorf("failed to sed %s: %v", err, upstream.repo)
+			return false, fmt.Errorf("failed to sed: component=%s file=%s: %v", upstream.repo, file, err)
 		}
 		updated = true
 	}

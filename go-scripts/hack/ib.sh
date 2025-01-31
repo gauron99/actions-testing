@@ -6,6 +6,6 @@
   local kn_version=1.13.0
 local jq_version=1.7.1
 
-knative_serving_version=1.14.5
-knative_eventing_version=1.12.3
-contour_version=1.1.1
+knative_serving_version="v1.14.5"
+knative_eventing_version="v1.12.3"
+contour_version="v1.1.1"

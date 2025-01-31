@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/go-git/go-git/v5"
 	github "github.com/google/go-github/v68/github"
 )
 
@@ -17,6 +18,20 @@ var (
 	knEvtPrefix = "knative_eventing_version="
 	knCnrPrefix = "contour_version="
 )
+
+func getLatestOrReleaseVersion(ctx context.Context, client *github.Client, owner string, repo string) (v string, err error) {
+	r, err := git.PlainOpen("..")
+	if err != nil {
+		return "", err
+	}
+	ref, err := r.Head()
+	if err != nil {
+		return "", err
+	}
+	fmt.Printf("current branch is: %s\n", ref.Name().Short())
+	os.Exit(0)
+	return
+}
 
 // get latest version of owner/repo via GH API
 func getLatestVersion(ctx context.Context, client *github.Client, owner string, repo string) (v string, err error) {
@@ -155,7 +170,7 @@ func main() {
 	}
 	var err error
 	for i, p := range projects {
-		projects[i].version, err = getLatestVersion(ctx, client, p.owner, p.repo)
+		projects[i].version, err = getLatestOrReleaseVersion(ctx, client, p.owner, p.repo)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error while getting latest v of %s/%s: %v\n", p.owner, p.repo, err)
 			os.Exit(1)

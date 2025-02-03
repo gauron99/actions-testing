@@ -122,7 +122,7 @@ func prepareBranch() error {
 		return err
 	}
 	fmt.Printf("3out: %s\n", out)
-	cmd = exec.Command("git", "checkout", "-b", branchName)
+	cmd = exec.Command("git", "switch", "-c", branchName)
 	out, err = cmd.CombinedOutput()
 	if err != nil {
 		return err

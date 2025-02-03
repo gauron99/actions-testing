@@ -153,10 +153,10 @@ func prepareBranch() error {
 	fmt.Printf("6out: %s\n", out)
 
 	out, err = exec.Command("git", "push", "origin", branchName).CombinedOutput()
+	fmt.Printf("7out: %s\n", out)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("7out: %s\n", out)
 	return nil
 }
 

@@ -129,19 +129,19 @@ func prepareBranch() error {
 	}
 	fmt.Printf("4out: %s\n", out)
 	cmd = exec.Command("git", "add", file)
-	out, err = cmd.Output()
+	out, err = cmd.CombinedOutput()
 	if err != nil {
 		return err
 	}
 	fmt.Printf("5out: %s\n", out)
 	cmd = exec.Command("git", "commit", "-m", "\"update components\"")
-	out, err = cmd.Output()
+	out, err = cmd.CombinedOutput()
 	if err != nil {
 		return err
 	}
 	fmt.Printf("6out: %s\n", out)
 	cmd = exec.Command("git", "push", "--set-upstream", "origin", branchName)
-	out, err = cmd.Output()
+	out, err = cmd.CombinedOutput()
 	if err != nil {
 		return err
 	}

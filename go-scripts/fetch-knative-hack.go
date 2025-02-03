@@ -102,6 +102,7 @@ func tryUpdateFile(repo, newV, oldV string) (bool, error) {
 }
 
 func prepareBranch() error {
+	fmt.Println("> prep branch")
 	branchName := "update-components" + time.Now().Format(time.DateOnly)
 	cmd := exec.Command(
 		"git", "config", "user.email", "fridrich.david19@gmail.com", "&&",
@@ -120,6 +121,7 @@ func prepareBranch() error {
 
 // create a PR for the new updates
 func createPR(ctx context.Context, client *github.Client, title string) error {
+	fmt.Println("> createPR")
 	newPR := github.NewPullRequest{Title: github.Ptr(title), MaintainerCanModify: github.Ptr(true)}
 	client.PullRequests.Create(ctx, "gauron99", "actions-testing", &newPR)
 	return nil

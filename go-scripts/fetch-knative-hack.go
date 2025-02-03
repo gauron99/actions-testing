@@ -17,6 +17,7 @@ var (
 	knSrvPrefix = "knative_serving_version="
 	knEvtPrefix = "knative_eventing_version="
 	knCnrPrefix = "contour_version="
+	file        = "hack/ib.sh"
 )
 
 // get current branch this is running o
@@ -197,7 +198,6 @@ func main() {
 	// create, PR etc etc
 	err = prepareBranch()
 
-	file := "hack/ib.sh"
 	prTitle := fmt.Sprintf("chore: testing PR, trying to update a %s file", file)
 	err = createPR(ctx, client, prTitle)
 }

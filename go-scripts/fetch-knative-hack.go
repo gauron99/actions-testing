@@ -7,8 +7,8 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
-	"github.com/go-git/go-git/v5"
 	github "github.com/google/go-github/v68/github"
 )
 
@@ -19,20 +19,7 @@ var (
 	knCnrPrefix = "contour_version="
 )
 
-func getLatestOrReleaseVersion(ctx context.Context, client *github.Client, owner string, repo string) (v string, err error) {
-	r, err := git.PlainOpen("..")
-	if err != nil {
-		return "", err
-	}
-	ref, err := r.Head()
-	if err != nil {
-		return "", err
-	}
-	fmt.Printf("current branch is: %s\n", ref.Name().Short())
-	os.Exit(0)
-	return
-}
-
+// get current branch this is running o
 // get latest version of owner/repo via GH API
 func getLatestVersion(ctx context.Context, client *github.Client, owner string, repo string) (v string, err error) {
 	fmt.Printf("get latest repo %s/%s\n", owner, repo)
@@ -98,50 +85,43 @@ func getVersionsFromFile() (srv string, evt string, cnr string, err error) {
 	return
 }
 
-// Update version in file if new releases of eventing/serving/net-concour exist
-// if applicable.
-func tryUpdateFile(upstreams []struct{ owner, repo, version string }) (updated bool, err error) {
-	file := "hack/ib.sh"
-	updated = false
-
-	// get current versions used. Get all together to limit opening/closing
-	// the file
-	oldSrv, oldEvt, oldCnr, err := getVersionsFromFile()
-	if err != nil {
-		return false, err
-	}
-
-	// update files to latest release where applicable
-	for _, upstream := range upstreams {
-		var cmd *exec.Cmd
-		switch upstream.repo {
-		case "serving":
-			if upstream.version != oldSrv {
-				fmt.Printf("update serving from '%s' to '%s'\n", oldSrv, upstream.version)
-				cmd = exec.Command("sed", "-i", "-e", "s/"+knSrvPrefix+oldSrv+"/"+knSrvPrefix+upstream.version+"/g", file)
-			}
-		case "eventing":
-			if upstream.version != oldEvt {
-				fmt.Printf("update eventing from '%s' to '%s'\n", oldEvt, upstream.version)
-				cmd = exec.Command("sed", "-i", "-e", "s/"+knEvtPrefix+oldEvt+"/"+knEvtPrefix+upstream.version+"/g", file)
-			}
-		case "net-contour":
-			if upstream.version != oldCnr {
-				fmt.Printf("update concour from '%s' to '%s'\n", oldCnr, upstream.version)
-				cmd = exec.Command("sed", "-i", "-e", "s/"+knCnrPrefix+oldCnr+"/"+knCnrPrefix+upstream.version+"/g", file)
-			}
-		default:
-			err = fmt.Errorf("unkown upstream.repo in for loop, exiting")
-			break
-		}
-		err = cmd.Run()
+// try updating the version of component named by "repo" via 'sed'
+func tryUpdateFile(repo, newV, oldV string) (bool, error) {
+	quoteWrap := func(s string) string { return "\"" + s + "\"" }
+	if newV != oldV {
+		fmt.Printf("Updating %s from '%s' to '%s'\n", repo, oldV, newV)
+		cmd := exec.Command("sed", "-i", "-e", "s/"+knSrvPrefix+quoteWrap(oldV)+"/"+knSrvPrefix+quoteWrap(newV)+"/g", file)
+		err := cmd.Run()
 		if err != nil {
-			return false, fmt.Errorf("failed to sed: component=%s file=%s: %v", upstream.repo, file, err)
+			return false, fmt.Errorf("error while updating '%s' version: %s", repo, err)
 		}
-		updated = true
+		return true, nil
 	}
+	return false, nil
+}
 
-	return updated, nil
+func prepareBranch() error {
+	branchName := "update-components" + time.Now().Format(time.DateOnly)
+	cmd := exec.Command(
+		"git", "config", "user.email", "fridrich.david19@gmail.com", "&&",
+		"git", "config", "user.name", "David Fridrich(bot)", "&&",
+		"git", "checkout", "-b", branchName, "&&",
+		"git", "add", "hack/ib.sh",
+		"git", "commit", "-m", "update components", "&&",
+		"git", "push", "--set-upstream", "origin", branchName)
+	out, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("out: %s\n", out)
+	return nil
+}
+
+// create a PR for the new updates
+func createPR(ctx context.Context, client *github.Client, title string) error {
+	newPR := github.NewPullRequest{Title: github.Ptr(title), MaintainerCanModify: github.Ptr(true)}
+	client.PullRequests.Create(ctx, "gauron99", "actions-testing", &newPR)
+	return nil
 }
 
 // MAIN
@@ -168,26 +148,56 @@ func main() {
 			repo:  "net-contour",
 		},
 	}
-	var err error
-	for i, p := range projects {
-		projects[i].version, err = getLatestOrReleaseVersion(ctx, client, p.owner, p.repo)
+	// get current versions used. Get all together to limit opening/closing
+	// the file
+	oldSrv, oldEvt, oldCntr, err := getVersionsFromFile()
+	if err != nil {
+		fmt.Printf("err: %w\n", err)
+		os.Exit(1)
+	}
+
+	updated := false
+	// cycle through all versions of components listed above, fetch their
+	// latest from github releases - cmp them - create PR for update if necessary
+	for _, p := range projects {
+		newV, err := getLatestVersion(ctx, client, p.owner, p.repo)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error while getting latest v of %s/%s: %v\n", p.owner, p.repo, err)
 			os.Exit(1)
 		}
 
-	}
-
-	updated, err := tryUpdateFile(projects)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		// sync the old repo & version
+		oldV := ""
+		switch p.repo {
+		case "serving":
+			oldV = oldSrv
+		case "eventing":
+			oldV = oldEvt
+		case "net-contour":
+			oldV = oldCntr
+		}
+		// check if component is eligible for update & update if possible
+		isNew, err := tryUpdateFile(p.repo, newV, oldV)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		// if any of the files are updated, set this so we create a PR later
+		if isNew {
+			updated = true
+		}
 	}
 
 	if !updated {
 		// nothing was updated, nothing to do
-		fmt.Print("nothing to update")
-		os.Exit(0)
+		fmt.Printf("all good, no newer component releases, exiting\n")
+		os.Exit(1)
 	}
+	fmt.Printf("file %s updated! Creating a PR...\n", "hack/ib.sh")
 	// create, PR etc etc
+	err = prepareBranch()
+
+	file := "hack/ib.sh"
+	prTitle := fmt.Sprintf("chore: testing PR, trying to update a %s file", file)
+	err = createPR(ctx, client, prTitle)
 }

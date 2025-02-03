@@ -104,36 +104,38 @@ func tryUpdateFile(repo, newV, oldV string) (bool, error) {
 func prepareBranch() error {
 	fmt.Println("> prep branch")
 	branchName := "update-components" + time.Now().Format(time.DateOnly)
-	cmd := exec.Command("git", "status")
+	cmd := exec.Command("git", "config", "set", "user.email", "\"fridrich.david19@gmail.com\"")
 	out, err := cmd.CombinedOutput()
-	fmt.Printf("out: %s\n", out)
-	if err != nil {
-		return err
-	}
-	cmd = exec.Command("git", "config", "set", "user.email", "\"fridrich.david19@gmail.com\"")
-	out, err = cmd.Output()
 	if err != nil {
 		return err
 	}
 	fmt.Printf("1out: %s\n", out)
 	cmd = exec.Command("git", "config", "set", "user.email", "\"fridrich.david19@gmail.com\"")
-	out, err = cmd.Output()
+	out, err = cmd.CombinedOutput()
 	if err != nil {
 		return err
 	}
 	fmt.Printf("2out: %s\n", out)
 	cmd = exec.Command("git", "config", "set", "user.name", "\"David Fridrich(bot)\"")
-	out, err = cmd.Output()
+	out, err = cmd.CombinedOutput()
 	if err != nil {
 		return err
 	}
 	fmt.Printf("3out: %s\n", out)
 	cmd = exec.Command("git", "checkout", "-b", branchName)
-	out, err = cmd.Output()
+	out, err = cmd.CombinedOutput()
 	if err != nil {
 		return err
 	}
 	fmt.Printf("4out: %s\n", out)
+
+	cmd = exec.Command("git", "status")
+	out, err = cmd.CombinedOutput()
+	fmt.Printf("outS: %s\n", out)
+	if err != nil {
+		return err
+	}
+
 	cmd = exec.Command("git", "add", file)
 	out, err = cmd.CombinedOutput()
 	if err != nil {

@@ -137,7 +137,7 @@ func prepareBranch(branchName string) error {
 		return err
 	}
 
-	out, err = exec.Command("git", "push", "origin", branchName).CombinedOutput()
+	out, err = exec.Command("git", "push", "origin", branchName, "-f").CombinedOutput()
 	fmt.Printf("7out: %s\n", out)
 	if err != nil {
 		return err
@@ -155,11 +155,13 @@ func createPR(ctx context.Context, client *github.Client, title string, branchNa
 		Body:                github.Ptr(title),
 		MaintainerCanModify: github.Ptr(true),
 	}
-	pr, res, err := client.PullRequests.Create(ctx, "gauron99", "actions-testing", &newPR)
-	fmt.Printf("res: %#v\n", res)
+	pr, _, err := client.PullRequests.Create(ctx, "gauron99", "actions-testing", &newPR)
+	if err != nil {
+		fmt.Printf("err: %s\n", err)
+		return err
+	}
 	fmt.Printf("PR: %#v\n", pr)
-
-	return err
+	return nil
 }
 
 // MAIN

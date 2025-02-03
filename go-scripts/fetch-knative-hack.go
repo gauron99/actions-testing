@@ -104,7 +104,9 @@ func tryUpdateFile(repo, newV, oldV string) (bool, error) {
 func prepareBranch() error {
 	fmt.Println("> prep branch")
 	branchName := "update-components" + time.Now().Format(time.DateOnly)
-	cmd := exec.Command("git", "config", "set", "user.email", "\"fridrich.david19@gmail.com\"")
+	cmd := exec.Command("git", "status")
+	cmd.Run()
+	cmd = exec.Command("git", "config", "set", "user.email", "\"fridrich.david19@gmail.com\"")
 	out, err := cmd.Output()
 	if err != nil {
 		return err

@@ -109,43 +109,43 @@ func prepareBranch() error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("out: %s\n", out)
+	fmt.Printf("1out: %s\n", out)
 	cmd = exec.Command("git", "config", "set", "user.email", "\"fridrich.david19@gmail.com\"")
 	out, err = cmd.Output()
 	if err != nil {
 		return err
 	}
-	fmt.Printf("out: %s\n", out)
+	fmt.Printf("2out: %s\n", out)
 	cmd = exec.Command("git", "config", "set", "user.name", "\"David Fridrich(bot)\"")
 	out, err = cmd.Output()
 	if err != nil {
 		return err
 	}
-	fmt.Printf("out: %s\n", out)
+	fmt.Printf("3out: %s\n", out)
 	cmd = exec.Command("git", "checkout", "-b", branchName)
 	out, err = cmd.Output()
 	if err != nil {
 		return err
 	}
-	fmt.Printf("out: %s\n", out)
-	cmd = exec.Command("git", "add", "\"hack/ib.sh\"")
+	fmt.Printf("4out: %s\n", out)
+	cmd = exec.Command("git", "add", file)
 	out, err = cmd.Output()
 	if err != nil {
 		return err
 	}
-	fmt.Printf("out: %s\n", out)
+	fmt.Printf("5out: %s\n", out)
 	cmd = exec.Command("git", "commit", "-m", "\"update components\"")
 	out, err = cmd.Output()
 	if err != nil {
 		return err
 	}
-	fmt.Printf("out: %s\n", out)
+	fmt.Printf("6out: %s\n", out)
 	cmd = exec.Command("git", "push", "--set-upstream", "origin", branchName)
 	out, err = cmd.Output()
 	if err != nil {
 		return err
 	}
-	fmt.Printf("out: %s\n", out)
+	fmt.Printf("7out: %s\n", out)
 	return nil
 }
 

@@ -234,6 +234,12 @@ func main() {
 		fmt.Printf("all good, no newer component releases, exiting\n")
 		os.Exit(1)
 	}
+	cmd := exec.Command("cat", file)
+	out, err := cmd.CombinedOutput()
+	fmt.Printf("out in main: %s\n", out)
+	if err != nil {
+		os.Exit(1)
+	}
 	fmt.Printf("file %s updated! Creating a PR...\n", "hack/ib.sh")
 	// create, PR etc etc
 	err = prepareBranch()

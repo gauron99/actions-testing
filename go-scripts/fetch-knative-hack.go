@@ -161,7 +161,7 @@ func prepareBranch(branchName string) error {
 
 // create a PR for the new updates
 func createPR(ctx context.Context, client *github.Client, title string, branchName string, owner string) error {
-	fmt.Println("> createPR")
+	fmt.Println(">> createPR")
 	newPR := github.NewPullRequest{
 		Title:               github.Ptr(title),
 		Base:                github.Ptr("main"),

@@ -125,31 +125,17 @@ func prepareBranch(branchName string) error {
 	}
 	fmt.Printf("4out: %s\n", out)
 
-	cmd = exec.Command("git", "status")
-	out, err = cmd.CombinedOutput()
-	fmt.Printf("outS: %s\n", out)
-	if err != nil {
-		return err
-	}
-	out, err = exec.Command("git", "diff").CombinedOutput()
-	if err != nil {
-		return err
-	}
-	fmt.Printf("diff:\n%s\n", out)
-
-	cmd = exec.Command("git", "add", file)
-	out, err = cmd.CombinedOutput()
-	if err != nil {
-		return err
-	}
+	out, err = exec.Command("git", "add", file).CombinedOutput()
 	fmt.Printf("5out: %s\n", out)
-
-	cmd = exec.Command("git", "commit", "-m", "\"update components\"")
-	out, err = cmd.CombinedOutput()
 	if err != nil {
 		return err
 	}
+
+	out, err = exec.Command("git", "commit", "-m", "\"update components\"").CombinedOutput()
 	fmt.Printf("6out: %s\n", out)
+	if err != nil {
+		return err
+	}
 
 	out, err = exec.Command("git", "push", "origin", branchName).CombinedOutput()
 	fmt.Printf("7out: %s\n", out)
@@ -169,7 +155,10 @@ func createPR(ctx context.Context, client *github.Client, title string, branchNa
 		Body:                github.Ptr(title),
 		MaintainerCanModify: github.Ptr(true),
 	}
-	_, _, err := client.PullRequests.Create(ctx, "gauron99", "actions-testing", &newPR)
+	pr, res, err := client.PullRequests.Create(ctx, "gauron99", "actions-testing", &newPR)
+	fmt.Printf("res: %#v\n", *res)
+	fmt.Printf("PR: %#v\n", *pr)
+
 	return err
 }
 

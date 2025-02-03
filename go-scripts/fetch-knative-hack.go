@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 
 	github "github.com/google/go-github/v68/github"
 )
@@ -103,14 +102,15 @@ func tryUpdateFile(repo, newV, oldV string) (bool, error) {
 
 func prepareBranch() error {
 	fmt.Println("> prep branch")
-	branchName := "update-components" + time.Now().Format(time.DateOnly)
+	// branchName := "update-components" + time.Now().Format(time.DateOnly)
 	cmd := exec.Command(
 		"git", "config", "set", "user.email", "\"fridrich.david19@gmail.com\"", "&&",
-		"git", "config", "set", "user.name", "\"David Fridrich(bot)\"", "&&",
-		"git", "checkout", "-b", branchName, "&&",
-		"git", "add", "\"hack/ib.sh\"",
-		"git", "commit", "-m", "\"update components\"", "&&",
-		"git", "push", "--set-upstream", "origin", branchName)
+		"git", "config", "set", "user.name", "\"David Fridrich(bot)\"")
+	// "git", "config", "set", "user.name", "\"David Fridrich(bot)\"", "&&",
+	// "git", "checkout", "-b", branchName, "&&",
+	// "git", "add", "\"hack/ib.sh\"",
+	// "git", "commit", "-m", "\"update components\"", "&&",
+	// "git", "push", "--set-upstream", "origin", branchName)
 	out, err := cmd.Output()
 	if err != nil {
 		return err

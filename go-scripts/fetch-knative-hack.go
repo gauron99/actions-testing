@@ -156,6 +156,7 @@ func createPR(ctx context.Context, client *github.Client, title string, branchNa
 		MaintainerCanModify: github.Ptr(true),
 	}
 	pr, _, err := client.PullRequests.Create(ctx, "gauron99", "actions-testing", &newPR)
+
 	if err != nil {
 		fmt.Printf("err: %s\n", err)
 		return err

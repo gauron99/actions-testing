@@ -160,9 +160,15 @@ func prepareBranch(branchName string) error {
 }
 
 // create a PR for the new updates
-func createPR(ctx context.Context, client *github.Client, title string, branchName string) error {
+func createPR(ctx context.Context, client *github.Client, title string, branchName string, owner string) error {
 	fmt.Println("> createPR")
-	newPR := github.NewPullRequest{Title: github.Ptr(title), Base: github.Ptr("main"), Head: github.Ptr(branchName), MaintainerCanModify: github.Ptr(true)}
+	newPR := github.NewPullRequest{
+		Title:               github.Ptr(title),
+		Base:                github.Ptr("main"),
+		Head:                github.Ptr(owner + ":" + branchName),
+		Body:                github.Ptr(title),
+		MaintainerCanModify: github.Ptr(true),
+	}
 	_, _, err := client.PullRequests.Create(ctx, "gauron99", "actions-testing", &newPR)
 	return err
 }
@@ -252,6 +258,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	prTitle := fmt.Sprintf("chore: testing PR, trying to update a %s file", file)
-	err = createPR(ctx, client, prTitle, branchName)
+	prTitle := fmt.Sprintf("chore: testing PR, trying to update '%s' file", file)
+	err = createPR(ctx, client, prTitle, branchName, prTitle)
 }

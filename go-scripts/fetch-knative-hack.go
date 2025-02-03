@@ -105,8 +105,8 @@ func prepareBranch() error {
 	fmt.Println("> prep branch")
 	branchName := "update-components" + time.Now().Format(time.DateOnly)
 	cmd := exec.Command(
-		"git", "config", "user.email", "fridrich.david19@gmail.com", "&&",
-		"git", "config", "user.name", "David Fridrich(bot)", "&&",
+		"git", "config", "set", "user.email", "fridrich.david19@gmail.com", "&&",
+		"git", "config", "set", "user.name", "David Fridrich(bot)", "&&",
 		"git", "checkout", "-b", branchName, "&&",
 		"git", "add", "hack/ib.sh",
 		"git", "commit", "-m", "update components", "&&",

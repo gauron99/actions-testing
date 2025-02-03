@@ -98,9 +98,8 @@ func tryUpdateFile(repo, newV, oldV string) (bool, error) {
 	return false, nil
 }
 
-func prepareBranch() error {
+func prepareBranch(branchName string) error {
 	fmt.Println("> prep branch")
-	branchName := "update-components" + time.Now().Format(time.DateOnly)
 	cmd := exec.Command("git", "config", "set", "user.email", "\"fridrich.david19@gmail.com\"")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -161,11 +160,11 @@ func prepareBranch() error {
 }
 
 // create a PR for the new updates
-func createPR(ctx context.Context, client *github.Client, title string) error {
+func createPR(ctx context.Context, client *github.Client, title string, branchName string) error {
 	fmt.Println("> createPR")
-	newPR := github.NewPullRequest{Title: github.Ptr(title), MaintainerCanModify: github.Ptr(true)}
-	client.PullRequests.Create(ctx, "gauron99", "actions-testing", &newPR)
-	return nil
+	newPR := github.NewPullRequest{Title: github.Ptr(title), Base: github.Ptr("main"), Head: github.Ptr(branchName), MaintainerCanModify: github.Ptr(true)}
+	_, _, err := client.PullRequests.Create(ctx, "gauron99", "actions-testing", &newPR)
+	return err
 }
 
 // MAIN
@@ -245,12 +244,14 @@ func main() {
 	}
 	fmt.Printf("file %s updated! Creating a PR...\n", "hack/ib.sh")
 	// create, PR etc etc
-	err = prepareBranch()
+
+	branchName := "update-components" + time.Now().Format(time.DateOnly)
+	err = prepareBranch(branchName)
 	if err != nil {
 		fmt.Printf("error during branch prep: %s\n", err)
 		os.Exit(1)
 	}
 
 	prTitle := fmt.Sprintf("chore: testing PR, trying to update a %s file", file)
-	err = createPR(ctx, client, prTitle)
+	err = createPR(ctx, client, prTitle, branchName)
 }

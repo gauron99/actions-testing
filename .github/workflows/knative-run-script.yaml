@@ -17,6 +17,6 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ github.token }}
       run: |
-        ll -R
+        ls -lR
         go run ./fetch-knative-hack.go
 

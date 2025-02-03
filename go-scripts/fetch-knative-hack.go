@@ -145,6 +145,12 @@ func prepareBranch() error {
 		return err
 	}
 	fmt.Printf("6out: %s\n", out)
+	cmd = exec.Command("git", "remote", "-vv")
+	out, err = cmd.CombinedOutput()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("out-mezi: %s\n", out)
 	cmd = exec.Command("git", "push", "--set-upstream", "origin", branchName)
 	out, err = cmd.CombinedOutput()
 	if err != nil {

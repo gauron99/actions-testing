@@ -100,45 +100,34 @@ func tryUpdateFile(repo, newV, oldV string) (bool, error) {
 
 func prepareBranch(branchName string) error {
 	fmt.Println("> prep branch")
-	cmd := exec.Command("git", "config", "set", "user.email", "\"fridrich.david19@gmail.com\"")
-	out, err := cmd.CombinedOutput()
+	err := exec.Command("git", "config", "set", "user.email", "\"fridrich.david19@gmail.com\"").Run()
 	if err != nil {
 		return err
 	}
-	fmt.Printf("1out: %s\n", out)
-	cmd = exec.Command("git", "config", "set", "user.email", "\"fridrich.david19@gmail.com\"")
-	out, err = cmd.CombinedOutput()
+	err = exec.Command("git", "config", "set", "user.email", "\"fridrich.david19@gmail.com\"").Run()
 	if err != nil {
 		return err
 	}
-	fmt.Printf("2out: %s\n", out)
-	cmd = exec.Command("git", "config", "set", "user.name", "\"David Fridrich(bot)\"")
-	out, err = cmd.CombinedOutput()
+	err = exec.Command("git", "config", "set", "user.name", "\"David Fridrich(bot)\"").Run()
 	if err != nil {
 		return err
 	}
-	fmt.Printf("3out: %s\n", out)
-	cmd = exec.Command("git", "switch", "-c", branchName)
-	out, err = cmd.CombinedOutput()
-	if err != nil {
-		return err
-	}
-	fmt.Printf("4out: %s\n", out)
-
-	out, err = exec.Command("git", "add", file).CombinedOutput()
-	fmt.Printf("5out: %s\n", out)
+	err = exec.Command("git", "switch", "-c", branchName).Run()
 	if err != nil {
 		return err
 	}
 
-	out, err = exec.Command("git", "commit", "-m", "\"update components\"").CombinedOutput()
-	fmt.Printf("6out: %s\n", out)
+	err = exec.Command("git", "add", file).Run()
 	if err != nil {
 		return err
 	}
 
-	out, err = exec.Command("git", "push", "origin", branchName, "-f").CombinedOutput()
-	fmt.Printf("7out: %s\n", out)
+	err = exec.Command("git", "commit", "-m", "\"update components\"").Run()
+	if err != nil {
+		return err
+	}
+
+	err = exec.Command("git", "push", "origin", branchName, "-f").Run()
 	if err != nil {
 		return err
 	}
@@ -148,10 +137,11 @@ func prepareBranch(branchName string) error {
 // create a PR for the new updates
 func createPR(ctx context.Context, client *github.Client, title string, branchName string, owner string) error {
 	fmt.Println(">> createPR")
+	head := owner + ":" + branchName
 	newPR := github.NewPullRequest{
 		Title:               github.Ptr(title),
 		Base:                github.Ptr("main"),
-		Head:                github.Ptr(owner + ":" + branchName),
+		Head:                github.Ptr(head),
 		Body:                github.Ptr(title),
 		MaintainerCanModify: github.Ptr(true),
 	}

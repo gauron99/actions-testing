@@ -105,33 +105,47 @@ func prepareBranch() error {
 	fmt.Println("> prep branch")
 	branchName := "update-components" + time.Now().Format(time.DateOnly)
 	cmd := exec.Command("git", "config", "set", "user.email", "\"fridrich.david19@gmail.com\"")
-	if err := cmd.Run(); err != nil {
+	out, err := cmd.Output()
+	if err != nil {
 		return err
 	}
+	fmt.Printf("out: %s\n", out)
 	cmd = exec.Command("git", "config", "set", "user.email", "\"fridrich.david19@gmail.com\"")
-	if err := cmd.Run(); err != nil {
+	out, err = cmd.Output()
+	if err != nil {
 		return err
 	}
+	fmt.Printf("out: %s\n", out)
 	cmd = exec.Command("git", "config", "set", "user.name", "\"David Fridrich(bot)\"")
-	if err := cmd.Run(); err != nil {
+	out, err = cmd.Output()
+	if err != nil {
 		return err
 	}
+	fmt.Printf("out: %s\n", out)
 	cmd = exec.Command("git", "checkout", "-b", branchName)
-	if err := cmd.Run(); err != nil {
+	out, err = cmd.Output()
+	if err != nil {
 		return err
 	}
+	fmt.Printf("out: %s\n", out)
 	cmd = exec.Command("git", "add", "\"hack/ib.sh\"")
-	if err := cmd.Run(); err != nil {
+	out, err = cmd.Output()
+	if err != nil {
 		return err
 	}
+	fmt.Printf("out: %s\n", out)
 	cmd = exec.Command("git", "commit", "-m", "\"update components\"")
-	if err := cmd.Run(); err != nil {
+	out, err = cmd.Output()
+	if err != nil {
 		return err
 	}
+	fmt.Printf("out: %s\n", out)
 	cmd = exec.Command("git", "push", "--set-upstream", "origin", branchName)
-	if err := cmd.Run(); err != nil {
+	out, err = cmd.Output()
+	if err != nil {
 		return err
 	}
+	fmt.Printf("out: %s\n", out)
 	return nil
 }
 

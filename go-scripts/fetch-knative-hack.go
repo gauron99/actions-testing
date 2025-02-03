@@ -199,6 +199,10 @@ func main() {
 	fmt.Printf("file %s updated! Creating a PR...\n", "hack/ib.sh")
 	// create, PR etc etc
 	err = prepareBranch()
+	if err != nil {
+		fmt.Printf("error during branch prep: %s\n", err)
+		os.Exit(1)
+	}
 
 	prTitle := fmt.Sprintf("chore: testing PR, trying to update a %s file", file)
 	err = createPR(ctx, client, prTitle)

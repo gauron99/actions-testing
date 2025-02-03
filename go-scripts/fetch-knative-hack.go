@@ -87,7 +87,7 @@ func tryUpdateFile(repo, newV, oldV string) (bool, error) {
 	}
 	if newV != oldV {
 		fmt.Printf("Updating %s from '%s' to '%s'\n", repo, oldV, newV)
-		cmd := exec.Command("sed", "-i", "-e", "s/"+knSrvPrefix+quoteWrap(oldV)+"/"+knSrvPrefix+quoteWrap(newV)+"/g", file)
+		cmd := exec.Command("sed", "-i", "-e", "s/"+quoteWrap(oldV)+"/"+quoteWrap(newV)+"/g", file)
 		out, err := cmd.CombinedOutput()
 		if err != nil {
 			return false, fmt.Errorf("error while updating '%s' version: %s", repo, err)

@@ -132,6 +132,11 @@ func prepareBranch() error {
 	if err != nil {
 		return err
 	}
+	out, err = exec.Command("git", "diff").CombinedOutput()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("diff:\n%s\n", out)
 
 	cmd = exec.Command("git", "add", file)
 	out, err = cmd.CombinedOutput()
@@ -139,13 +144,6 @@ func prepareBranch() error {
 		return err
 	}
 	fmt.Printf("5out: %s\n", out)
-
-	cmd = exec.Command("git", "diff")
-	out, err = cmd.CombinedOutput()
-	if err != nil {
-		return err
-	}
-	fmt.Printf("diff:\n%s\n", out)
 
 	cmd = exec.Command("git", "commit", "-m", "\"update components\"")
 	out, err = cmd.CombinedOutput()

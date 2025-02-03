@@ -79,10 +79,15 @@ func getVersionsFromFile() (srv string, evt string, cnr string, err error) {
 
 // try updating the version of component named by "repo" via 'sed'
 func tryUpdateFile(repo, newV, oldV string) (bool, error) {
-	quoteWrap := func(s string) string { return "\"" + s + "\"" }
+	quoteWrap := func(s string) string {
+		if !strings.HasPrefix(s, "\"") {
+			return "\"" + s + "\""
+		}
+		return s
+	}
 	if newV != oldV {
 		fmt.Printf("Updating %s from '%s' to '%s'\n", repo, oldV, newV)
-		cmd := exec.Command("sed", "-i", "-e", "s/"+knSrvPrefix+oldV+"/"+knSrvPrefix+quoteWrap(newV)+"/g", file)
+		cmd := exec.Command("sed", "-i", "-e", "s/"+knSrvPrefix+quoteWrap(oldV)+"/"+knSrvPrefix+quoteWrap(newV)+"/g", file)
 		out, err := cmd.CombinedOutput()
 		if err != nil {
 			return false, fmt.Errorf("error while updating '%s' version: %s", repo, err)

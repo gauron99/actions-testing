@@ -64,19 +64,10 @@ func getVersionsFromFile() (srv string, evt string, cnr string, err error) {
 		// Fetch only the version number (after '=' without spaces because bash)
 		if strings.HasPrefix(line, knSrvPrefix) {
 			srv = strings.Split(line, "=")[1]
-			if !strings.HasPrefix(srv, "v") {
-				srv = "v" + srv
-			}
 		} else if strings.HasPrefix(line, knEvtPrefix) {
 			evt = strings.Split(line, "=")[1]
-			if !strings.HasPrefix(evt, "v") {
-				evt = "v" + evt
-			}
 		} else if strings.HasPrefix(line, knCnrPrefix) {
 			cnr = strings.Split(line, "=")[1]
-			if !strings.HasPrefix(cnr, "v") {
-				cnr = "v" + cnr
-			}
 		}
 		// if all values are acquired, no need to continue
 		if srv != "" && evt != "" && cnr != "" {
@@ -91,11 +82,12 @@ func tryUpdateFile(repo, newV, oldV string) (bool, error) {
 	quoteWrap := func(s string) string { return "\"" + s + "\"" }
 	if newV != oldV {
 		fmt.Printf("Updating %s from '%s' to '%s'\n", repo, oldV, newV)
-		cmd := exec.Command("sed", "-i", "-e", "s/"+knSrvPrefix+quoteWrap(oldV)+"/"+knSrvPrefix+quoteWrap(newV)+"/g", file)
-		err := cmd.Run()
+		cmd := exec.Command("sed", "-i", "-e", "s/"+knSrvPrefix+oldV+"/"+knSrvPrefix+quoteWrap(newV)+"/g", file)
+		out, err := cmd.CombinedOutput()
 		if err != nil {
 			return false, fmt.Errorf("error while updating '%s' version: %s", repo, err)
 		}
+		fmt.Printf("sed: %s\n", out)
 		return true, nil
 	}
 	return false, nil

@@ -105,9 +105,13 @@ func prepareBranch() error {
 	fmt.Println("> prep branch")
 	branchName := "update-components" + time.Now().Format(time.DateOnly)
 	cmd := exec.Command("git", "status")
-	cmd.Run()
+	out, err := cmd.CombinedOutput()
+	fmt.Printf("out: %s\n", out)
+	if err != nil {
+		return err
+	}
 	cmd = exec.Command("git", "config", "set", "user.email", "\"fridrich.david19@gmail.com\"")
-	out, err := cmd.Output()
+	out, err = cmd.Output()
 	if err != nil {
 		return err
 	}

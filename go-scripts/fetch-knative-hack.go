@@ -78,7 +78,7 @@ func getVersionsFromFile() (srv string, evt string, cnr string, err error) {
 }
 
 // try updating the version of component named by "repo" via 'sed'
-func tryUpdateFile(repo, newV, oldV string) (bool, error) {
+func tryUpdateFile(prefix, newV, oldV string) (bool, error) {
 	quoteWrap := func(s string) string {
 		if !strings.HasPrefix(s, "\"") {
 			return "\"" + s + "\""
@@ -86,11 +86,11 @@ func tryUpdateFile(repo, newV, oldV string) (bool, error) {
 		return s
 	}
 	if newV != oldV {
-		fmt.Printf("Updating %s from '%s' to '%s'\n", repo, oldV, newV)
-		cmd := exec.Command("sed", "-i", "-e", "s/"+quoteWrap(oldV)+"/"+quoteWrap(newV)+"/g", file)
+		fmt.Printf("Updating %s(%s -> %s)\n", prefix, oldV, newV)
+		cmd := exec.Command("sed", "-i", "-e", "s/"+prefix+quoteWrap(oldV)+"/"+prefix+quoteWrap(newV)+"/g", file)
 		out, err := cmd.CombinedOutput()
 		if err != nil {
-			return false, fmt.Errorf("error while updating '%s' version: %s", repo, err)
+			return false, fmt.Errorf("error while updating: %s", err)
 		}
 		fmt.Printf("sed: %s\n", out)
 		return true, nil
@@ -116,12 +116,10 @@ func prepareBranch(branchName string) error {
 	if err != nil {
 		return err
 	}
-
 	err = exec.Command("git", "add", file).Run()
 	if err != nil {
 		return err
 	}
-
 	err = exec.Command("git", "commit", "-m", "\"update components\"").Run()
 	if err != nil {
 		return err

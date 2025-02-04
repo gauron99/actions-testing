@@ -1,7 +1,7 @@
 name: testing knative hack dir thing
 
 
-on: 
+on:
   workflow_dispatch:
   push:
 

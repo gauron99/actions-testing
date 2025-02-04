@@ -273,6 +273,6 @@ func main() {
 	}
 	err = createPR(ctx, client, prTitle, branchName)
 	if err != nil {
-		Os.Exit(1)
+		os.Exit(1)
 	}
 }

@@ -184,18 +184,18 @@ func prExists(ctx context.Context, c *github.Client, title string) (bool, error)
 // ----------------------------------------------------------------------------
 
 // entry function -- essentially "func main() for this file"
-func updateComponentVersions() error {
+func main() {
 	prTitle := "chore: Update components' versions to latest"
 	ctx := context.Background()
 	client := github.NewClient(nil).WithAuthToken(os.Getenv("GITHUB_TOKEN"))
 
 	e, err := prExists(ctx, client, prTitle)
 	if err != nil {
-		return err
+		os.Exit(1)
 	}
 	if e {
 		fmt.Printf("PR already exists, nothing to do, exiting")
-		return nil
+		os.Exit(0)
 	}
 
 	projects := []struct {
@@ -220,7 +220,7 @@ func updateComponentVersions() error {
 	// Could be reworked to keep the file open through out the for cycle.
 	oldSrv, oldEvt, oldCntr, err := getVersionsFromFile()
 	if err != nil {
-		return err
+		os.Exit(1)
 	}
 
 	updated := false
@@ -250,7 +250,7 @@ func updateComponentVersions() error {
 		// try and overwrite the file with new versions
 		isNew, err := tryUpdateFile(prefix, newV, oldV)
 		if err != nil {
-			return err
+			os.Exit(1)
 		}
 		// if any of the files are updated, set this so we create a PR later
 		if isNew {
@@ -261,7 +261,7 @@ func updateComponentVersions() error {
 	if !updated {
 		// nothing was updated, nothing to do
 		fmt.Printf("all good, no newer component releases, exiting\n")
-		return nil
+		os.Exit(0)
 	}
 	fmt.Printf("file %s updated! Creating a PR...\n", file)
 	// create, PR etc etc
@@ -269,8 +269,10 @@ func updateComponentVersions() error {
 	branchName := "update-components" + time.Now().Format(time.DateOnly)
 	err = prepareBranch(branchName)
 	if err != nil {
-		return fmt.Errorf("failed to prep the branch: %v", err)
+		os.Exit(1)
 	}
 	err = createPR(ctx, client, prTitle, branchName)
-	return err
+	if err != nil {
+		Os.Exit(1)
+	}
 }

@@ -16,7 +16,7 @@ var (
 	// search for these variables
 	knSrvPrefix = "knative_serving_version="
 	knEvtPrefix = "knative_eventing_version="
-	knCnrPrefix = "contour_version="
+	knCtrPrefix = "contour_version="
 	file        = "hack/ib.sh"
 )
 
@@ -43,10 +43,10 @@ func getLatestVersion(ctx context.Context, client *github.Client, owner string, 
 // read the ib.sh file where serving and eventing versions are
 // located. Read that file to find them via prefix above. Fetch their version
 // and return them in 'v1.23.0' format. (To be compared with the current latest)
-func getVersionsFromFile() (srv string, evt string, cnr string, err error) {
+func getVersionsFromFile() (srv string, evt string, ctr string, err error) {
 	srv = "" //serving
 	evt = "" //eventing
-	cnr = "" //net-concour (knative-extensions)
+	ctr = "" //net-contour (knative-extensions)
 
 	var f = "hack/ib.sh"
 
@@ -59,18 +59,30 @@ func getVersionsFromFile() (srv string, evt string, cnr string, err error) {
 	fs := bufio.NewScanner(file)
 	fs.Split(bufio.ScanLines)
 	for fs.Scan() {
-		// Look for a prefix in a trimmed line.
-		line := strings.TrimSpace(fs.Text())
-		// Fetch only the version number (after '=' without spaces because bash)
-		if strings.HasPrefix(line, knSrvPrefix) {
-			srv = strings.Split(line, "=")[1]
-		} else if strings.HasPrefix(line, knEvtPrefix) {
-			evt = strings.Split(line, "=")[1]
-		} else if strings.HasPrefix(line, knCnrPrefix) {
-			cnr = strings.Split(line, "=")[1]
+		// trim white space -> split the line via '='
+		lineArr := strings.Split(strings.TrimSpace(fs.Text()), "=")
+		if len(lineArr) != 2 {
+			continue
+		}
+		// add "=" for consise matching of the value assignment -- in case the value
+		// is used elsewhere in the file for any reason.
+		prefix := lineArr[0] + "="
+		// trim '"' and 'v' from the value for robustness (will be added back later)
+		// "v1.2.3" or v1.2.3 or "1.2.3" or v1.2.3 --> 1.2.3
+		val := strings.TrimFunc(lineArr[1], func(r rune) bool {
+			return r == '"' || r == 'v'
+		})
+
+		switch prefix {
+		case knSrvPrefix:
+			srv = "v" + val
+		case knEvtPrefix:
+			evt = "v" + val
+		case knCtrPrefix:
+			ctr = "v" + val
 		}
 		// if all values are acquired, no need to continue
-		if srv != "" && evt != "" && cnr != "" {
+		if srv != "" && evt != "" && ctr != "" {
 			break
 		}
 	}
@@ -79,6 +91,7 @@ func getVersionsFromFile() (srv string, evt string, cnr string, err error) {
 
 // try updating the version of component named by "repo" via 'sed'
 func tryUpdateFile(prefix, newV, oldV string) (bool, error) {
+	fmt.Printf("> Try update %s=(%s -> %s)\n", prefix, oldV, newV)
 	quoteWrap := func(s string) string {
 		if !strings.HasPrefix(s, "\"") {
 			return "\"" + s + "\""
@@ -180,7 +193,7 @@ func main() {
 	// the file
 	oldSrv, oldEvt, oldCntr, err := getVersionsFromFile()
 	if err != nil {
-		fmt.Printf("err: %w\n", err)
+		fmt.Printf("err: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -196,16 +209,20 @@ func main() {
 
 		// sync the old repo & version
 		oldV := ""
+		prefix := ""
 		switch p.repo {
 		case "serving":
 			oldV = oldSrv
+			prefix = knSrvPrefix
 		case "eventing":
 			oldV = oldEvt
+			prefix = knEvtPrefix
 		case "net-contour":
 			oldV = oldCntr
+			prefix = knCtrPrefix
 		}
 		// check if component is eligible for update & update if possible
-		isNew, err := tryUpdateFile(p.repo, newV, oldV)
+		isNew, err := tryUpdateFile(prefix, newV, oldV)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -223,7 +240,7 @@ func main() {
 	}
 	cmd := exec.Command("cat", file)
 	out, err := cmd.CombinedOutput()
-	fmt.Printf("out in main: %s\n", out)
+	fmt.Printf("cat out in main: %s\n", out)
 	if err != nil {
 		os.Exit(1)
 	}

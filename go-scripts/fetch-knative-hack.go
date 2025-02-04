@@ -17,13 +17,13 @@ var (
 	knSrvPrefix = "knative_serving_version="
 	knEvtPrefix = "knative_eventing_version="
 	knCtrPrefix = "contour_version="
-	file        = "hack/ib.sh"
+
+	file = "hack/ib.sh"
 )
 
-// get current branch this is running o
 // get latest version of owner/repo via GH API
 func getLatestVersion(ctx context.Context, client *github.Client, owner string, repo string) (v string, err error) {
-	fmt.Printf("get latest repo %s/%s\n", owner, repo)
+	fmt.Printf("> get latest '%s/%s'...", owner, repo)
 	rr, res, err := client.Repositories.GetLatestRelease(ctx, owner, repo)
 	if err != nil {
 		err = fmt.Errorf("error: request for latest %s release: %v", owner+"/"+repo, err)
@@ -35,28 +35,26 @@ func getLatestVersion(ctx context.Context, client *github.Client, owner string, 
 	}
 	v = *rr.Name
 	if v == "" {
-		return "", fmt.Errorf("error: returned latest release name is empty for '%s'", repo)
+		return "", fmt.Errorf("internal error: returned latest release name is empty for '%s'", repo)
 	}
+	fmt.Println("done")
 	return v, nil
 }
 
-// read the ib.sh file where serving and eventing versions are
-// located. Read that file to find them via prefix above. Fetch their version
-// and return them in 'v1.23.0' format. (To be compared with the current latest)
+// Read the file where components versions are located. Fetch their version
+// and return them in 'v1.23.0' format (unquoted).
 func getVersionsFromFile() (srv string, evt string, ctr string, err error) {
 	srv = "" //serving
 	evt = "" //eventing
 	ctr = "" //net-contour (knative-extensions)
 
-	var f = "hack/ib.sh"
-
-	file, err := os.OpenFile(f, os.O_RDWR, 0600)
+	f, err := os.OpenFile(file, os.O_RDWR, 0600)
 	if err != nil {
-		err = fmt.Errorf("cant open file '%s': %v", f, err)
+		err = fmt.Errorf("cant open file '%s': %v", file, err)
 	}
-	defer file.Close()
+	defer f.Close()
 	// read file line by line
-	fs := bufio.NewScanner(file)
+	fs := bufio.NewScanner(f)
 	fs.Split(bufio.ScanLines)
 	for fs.Scan() {
 		// trim white space -> split the line via '='
@@ -81,6 +79,7 @@ func getVersionsFromFile() (srv string, evt string, ctr string, err error) {
 		case knCtrPrefix:
 			ctr = "v" + val
 		}
+
 		// if all values are acquired, no need to continue
 		if srv != "" && evt != "" && ctr != "" {
 			break
@@ -91,7 +90,7 @@ func getVersionsFromFile() (srv string, evt string, ctr string, err error) {
 
 // try updating the version of component named by "repo" via 'sed'
 func tryUpdateFile(prefix, newV, oldV string) (bool, error) {
-	fmt.Printf("> Try update %s=(%s -> %s)\n", prefix, oldV, newV)
+	fmt.Printf("> try updating %s(%s -> %s)...", prefix, oldV, newV)
 	quoteWrap := func(s string) string {
 		if !strings.HasPrefix(s, "\"") {
 			return "\"" + s + "\""
@@ -99,29 +98,25 @@ func tryUpdateFile(prefix, newV, oldV string) (bool, error) {
 		return s
 	}
 	if newV != oldV {
-		fmt.Printf("Updating %s(%s -> %s)\n", prefix, oldV, newV)
+		fmt.Println("updating")
 		cmd := exec.Command("sed", "-i", "-e", "s/"+prefix+quoteWrap(oldV)+"/"+prefix+quoteWrap(newV)+"/g", file)
-		out, err := cmd.CombinedOutput()
+		err := cmd.Run()
 		if err != nil {
-			return false, fmt.Errorf("error while updating: %s", err)
+			return false, fmt.Errorf("error while updating file: %s", err)
 		}
-		fmt.Printf("sed: %s\n", out)
 		return true, nil
 	}
 	return false, nil
 }
 
+// prepare branch for PR via git commands
 func prepareBranch(branchName string) error {
-	fmt.Println("> prep branch")
+	fmt.Print("> prepare branch...")
 	err := exec.Command("git", "config", "set", "user.email", "\"fridrich.david19@gmail.com\"").Run()
 	if err != nil {
 		return err
 	}
-	err = exec.Command("git", "config", "set", "user.email", "\"fridrich.david19@gmail.com\"").Run()
-	if err != nil {
-		return err
-	}
-	err = exec.Command("git", "config", "set", "user.name", "\"David Fridrich(bot)\"").Run()
+	err = exec.Command("git", "config", "set", "user.name", "\"David Fridrich(botted)\"").Run()
 	if err != nil {
 		return err
 	}
@@ -137,44 +132,74 @@ func prepareBranch(branchName string) error {
 	if err != nil {
 		return err
 	}
-
 	err = exec.Command("git", "push", "origin", branchName, "-f").Run()
 	if err != nil {
 		return err
 	}
+	fmt.Println("ready")
 	return nil
 }
 
 // create a PR for the new updates
-func createPR(ctx context.Context, client *github.Client, title string, branchName string, owner string) error {
-	fmt.Println(">> createPR")
+func createPR(ctx context.Context, client *github.Client, title string, branchName string) error {
+	fmt.Print("> creating PR...")
+	body := fmt.Sprintf("%s\n/assign @gauron99", title)
+
 	newPR := github.NewPullRequest{
 		Title:               github.Ptr(title),
 		Base:                github.Ptr("main"),
 		Head:                github.Ptr(branchName),
-		Body:                github.Ptr(title),
+		Body:                github.Ptr(body),
 		MaintainerCanModify: github.Ptr(true),
 	}
 	pr, _, err := client.PullRequests.Create(ctx, "gauron99", "actions-testing", &newPR)
-
 	if err != nil {
+		fmt.Printf("PR looks like this:\n%#v\n", pr)
 		fmt.Printf("err: %s\n", err)
 		return err
 	}
-	fmt.Printf("PR: %#v\n", pr)
+	fmt.Println("ready")
 	return nil
 }
 
-// MAIN
-func main() {
+// returns true when PR with given title already exists in knative/func repo
+// otherwise false. Returns an error if occured, otherwise nil.
+func prExists(ctx context.Context, c *github.Client, title string) (bool, error) {
+	opt := &github.PullRequestListOptions{State: "open"}
+	list, _, err := c.PullRequests.List(ctx, "gauron99", "actions-testing", opt)
+	if err != nil {
+		return false, fmt.Errorf("errror pulling PRs in knative/func: %s", err)
+	}
+	for _, pr := range list {
+		if pr.GetTitle() == title {
+			// gauron99 - currently cannot update already existing PR, shouldnt happen
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// ----------------------------------------------------------------------------
+// ----------------------------------- MAIN -----------------------------------
+// ----------------------------------------------------------------------------
+
+// entry function -- essentially "func main() for this file"
+func updateComponentVersions() error {
+	prTitle := "chore: Update components' versions to latest"
 	ctx := context.Background()
 	client := github.NewClient(nil).WithAuthToken(os.Getenv("GITHUB_TOKEN"))
 
-	// PR already exists?
-	// TODO
+	e, err := prExists(ctx, client, prTitle)
+	if err != nil {
+		return err
+	}
+	if e {
+		fmt.Printf("PR already exists, nothing to do, exiting")
+		return nil
+	}
 
 	projects := []struct {
-		owner, repo, version string
+		owner, repo string
 	}{
 		{
 			owner: "knative",
@@ -189,12 +214,13 @@ func main() {
 			repo:  "net-contour",
 		},
 	}
-	// get current versions used. Get all together to limit opening/closing
-	// the file
+
+	// Get current versions used.
+	// Get all together to limit opening/closingthe file.
+	// Could be reworked to keep the file open through out the for cycle.
 	oldSrv, oldEvt, oldCntr, err := getVersionsFromFile()
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
-		os.Exit(1)
+		return err
 	}
 
 	updated := false
@@ -221,11 +247,10 @@ func main() {
 			oldV = oldCntr
 			prefix = knCtrPrefix
 		}
-		// check if component is eligible for update & update if possible
+		// try and overwrite the file with new versions
 		isNew, err := tryUpdateFile(prefix, newV, oldV)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+			return err
 		}
 		// if any of the files are updated, set this so we create a PR later
 		if isNew {
@@ -236,24 +261,16 @@ func main() {
 	if !updated {
 		// nothing was updated, nothing to do
 		fmt.Printf("all good, no newer component releases, exiting\n")
-		os.Exit(1)
+		return nil
 	}
-	cmd := exec.Command("cat", file)
-	out, err := cmd.CombinedOutput()
-	fmt.Printf("cat out in main: %s\n", out)
-	if err != nil {
-		os.Exit(1)
-	}
-	fmt.Printf("file %s updated! Creating a PR...\n", "hack/ib.sh")
+	fmt.Printf("file %s updated! Creating a PR...\n", file)
 	// create, PR etc etc
 
 	branchName := "update-components" + time.Now().Format(time.DateOnly)
 	err = prepareBranch(branchName)
 	if err != nil {
-		fmt.Printf("error during branch prep: %s\n", err)
-		os.Exit(1)
+		return fmt.Errorf("failed to prep the branch: %v", err)
 	}
-
-	prTitle := fmt.Sprintf("chore: testing PR, trying to update '%s' file", file)
-	err = createPR(ctx, client, prTitle, branchName, prTitle)
+	err = createPR(ctx, client, prTitle, branchName)
+	return err
 }

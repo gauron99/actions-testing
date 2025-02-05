@@ -3,7 +3,6 @@ name: testing knative hack dir thing
 
 on:
   workflow_dispatch:
-  push:
 
 jobs:
   update:

@@ -118,7 +118,7 @@ func prepareBranch(branchName string) error {
 		git switch -c %s &&
 		git add %s &&
 		git commit -m "update components" &&
-		git push origin %s
+		git push --set-upstream origin %s
 	`, branchName, file, branchName))
 	o, err := cmd.CombinedOutput()
 	fmt.Printf("> %s\n", o)

@@ -112,32 +112,18 @@ func tryUpdateFile(prefix, newV, oldV string) (bool, error) {
 // prepare branch for PR via git commands
 func prepareBranch(branchName string) error {
 	fmt.Print("> prepare branch...")
-	err := exec.Command("git", "config", "set", "user.email", "\"fridrich.david19@gmail.com\"").Run()
-	if err != nil {
-		return err
-	}
-	err = exec.Command("git", "config", "set", "user.name", "\"David Fridrich(botted)\"").Run()
-	if err != nil {
-		return err
-	}
-	err = exec.Command("git", "switch", "-c", branchName).Run()
-	if err != nil {
-		return err
-	}
-	err = exec.Command("git", "add", file).Run()
-	if err != nil {
-		return err
-	}
-	err = exec.Command("git", "commit", "-m", "\"update components\"").Run()
-	if err != nil {
-		return err
-	}
-	err = exec.Command("git", "push", "origin", branchName, "-f").Run()
-	if err != nil {
-		return err
-	}
+	cmd := exec.Command("bash", "-c", fmt.Sprintf(`
+		git config --local user.email "david.fridrich19@gmail.com" &&
+		git config --local user.name "David Fridrich" &&
+		git switch -c %s &&
+		git add %s &&
+		git commit -m "update components" &&
+		git push origin %s -f
+	`, branchName, file, branchName))
+	o, err := cmd.CombinedOutput()
+	fmt.Printf("> %s\n", o)
 	fmt.Println("ready")
-	return nil
+	return err
 }
 
 // create a PR for the new updates

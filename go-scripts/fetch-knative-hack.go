@@ -124,12 +124,32 @@ func getLatestVersion(ctx context.Context, client *github.Client, owner string, 
 		err = fmt.Errorf("error: Return status code of request for latest %s release is %d", owner+"/"+repo, res.StatusCode)
 		return
 	}
+	if rr == nil {
+		return "", fmt.Errorf("internal error: getting latest release return nil struct")
+	}
 	v = *rr.Name
 	if v == "" {
 		return "", fmt.Errorf("internal error: returned latest release name is empty for '%s'", repo)
 	}
 	fmt.Println("done")
 	return v, nil
+}
+
+// returns true when PR with given title already exists in knative/func repo
+// otherwise false. Returns an error if occured, otherwise nil.
+func prExists(ctx context.Context, c *github.Client, title string) (bool, error) {
+	opt := &github.PullRequestListOptions{State: "open"}
+	list, _, err := c.PullRequests.List(ctx, "gauron99", "actions-testing", opt)
+	if err != nil {
+		return false, fmt.Errorf("errror pulling PRs in knative/func: %s", err)
+	}
+	for _, pr := range list {
+		if pr.GetTitle() == title {
+			// gauron99 - currently cannot update already existing PR, shouldnt happen
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // Read versions from a .json file
@@ -144,6 +164,7 @@ func readVersions(filename string) (v Versions, err error) {
 
 // attempt to update 'v' Versions to new 'val' for specific 'repo'
 func updateVersion(v *Versions, repo, val string) (updated bool) {
+	fmt.Printf("check for %s update...", repo)
 	if repo == "serving" && v.Serving != val {
 		v.Serving = val
 		updated = true
@@ -153,6 +174,11 @@ func updateVersion(v *Versions, repo, val string) (updated bool) {
 	} else if repo == "net-contour" && v.Contour != val {
 		v.Contour = val
 		updated = true
+	}
+	if updated {
+		fmt.Printf("found! new:'%s'\n", val)
+	} else {
+		fmt.Println("nothing to do")
 	}
 	return
 }
@@ -221,7 +247,7 @@ func prepareBranch(branchName string) error {
 	// cmd.Stderr = os.Stderr
 	// cmd.Stdout = os.Stdout
 	o, err := cmd.CombinedOutput()
-	fmt.Printf("output: %v\n", o)
+	fmt.Printf("output: %v\n", string(o))
 	fmt.Println("ready")
 	return err
 }
@@ -246,21 +272,4 @@ func createPR(ctx context.Context, client *github.Client, title string, branchNa
 	}
 	fmt.Println("ready")
 	return nil
-}
-
-// returns true when PR with given title already exists in knative/func repo
-// otherwise false. Returns an error if occured, otherwise nil.
-func prExists(ctx context.Context, c *github.Client, title string) (bool, error) {
-	opt := &github.PullRequestListOptions{State: "open"}
-	list, _, err := c.PullRequests.List(ctx, "gauron99", "actions-testing", opt)
-	if err != nil {
-		return false, fmt.Errorf("errror pulling PRs in knative/func: %s", err)
-	}
-	for _, pr := range list {
-		if pr.GetTitle() == title {
-			// gauron99 - currently cannot update already existing PR, shouldnt happen
-			return true, nil
-		}
-	}
-	return false, nil
 }

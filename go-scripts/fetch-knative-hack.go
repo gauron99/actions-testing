@@ -87,7 +87,10 @@ func main() {
 			fmt.Fprintf(os.Stderr, "error while getting latest v of %s/%s: %v\n", p.owner, p.repo, err)
 			os.Exit(1)
 		}
-		updated = updateVersion(&v, p.repo, newV)
+		new := updateVersion(&v, p.repo, newV)
+		if new {
+			updated = true
+		}
 	}
 
 	if !updated {
@@ -238,7 +241,6 @@ func prepareBranch(branchName string) error {
 		git config --local user.email "david.fridrich19@gmail.com" &&
 		git config --local user.name "David Fridrich" &&
 		git switch -c %s &&
-		git status &&
 		git add %s %s &&
 		git commit -m "update components" &&
 		git push --set-upstream origin %s

@@ -212,13 +212,14 @@ func prepareBranch(branchName string) error {
 		git config --local user.email "david.fridrich19@gmail.com" &&
 		git config --local user.name "David Fridrich" &&
 		git switch -c %s &&
-		git add %s &&
+		git status &&
+		git add %s %s &&
 		git commit -m "update components" &&
 		git push --set-upstream origin %s
-	`, branchName, file, branchName))
+	`, branchName, file, fileJson, branchName))
 
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
+	// cmd.Stderr = os.Stderr
+	// cmd.Stdout = os.Stdout
 	o, err := cmd.CombinedOutput()
 	fmt.Printf("output: %v\n", o)
 	fmt.Println("ready")

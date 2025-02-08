@@ -207,7 +207,7 @@ func writeVersionsScript(v Versions, filename string) error {
 
 // prepare branch for PR via git commands
 func prepareBranch(branchName string) error {
-	fmt.Print("> prepare branch...")
+	fmt.Println("> prepare branch...")
 	cmd := exec.Command("bash", "-c", fmt.Sprintf(`
 		git config --local user.email "david.fridrich19@gmail.com" &&
 		git config --local user.name "David Fridrich" &&
@@ -220,7 +220,7 @@ func prepareBranch(branchName string) error {
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	o, err := cmd.CombinedOutput()
-	fmt.Printf("> %s\n", o)
+	fmt.Printf("output: %v\n", o)
 	fmt.Println("ready")
 	return err
 }

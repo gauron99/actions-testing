@@ -87,8 +87,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "error while getting latest v of %s/%s: %v\n", p.owner, p.repo, err)
 			os.Exit(1)
 		}
-		new := updateVersion(&v, p.repo, newV)
-		if new {
+		if updateVersion(&v, p.repo, newV) {
 			updated = true
 		}
 	}
@@ -141,18 +140,26 @@ func getLatestVersion(ctx context.Context, client *github.Client, owner string, 
 // returns true when PR with given title already exists in knative/func repo
 // otherwise false. Returns an error if occured, otherwise nil.
 func prExists(ctx context.Context, c *github.Client, title string) (bool, error) {
-	opt := &github.PullRequestListOptions{State: "open"}
-	list, _, err := c.PullRequests.List(ctx, "gauron99", "actions-testing", opt)
-	if err != nil {
-		return false, fmt.Errorf("errror pulling PRs in knative/func: %s", err)
-	}
-	for _, pr := range list {
-		if pr.GetTitle() == title {
-			// gauron99 - currently cannot update already existing PR, shouldnt happen
-			return true, nil
+	perPage := 10
+	opt := &github.PullRequestListOptions{State: "open", ListOptions: github.ListOptions{PerPage: perPage}}
+	for {
+		list, resp, err := c.PullRequests.List(ctx, "gauron99", "actions-testing", opt)
+		if err != nil {
+			return false, fmt.Errorf("errror pulling PRs in knative/func: %s", err)
 		}
+		for _, pr := range list {
+			if pr.GetTitle() == title {
+				// gauron99 - currently cannot update already existing PR
+				return true, nil
+			}
+		}
+		if resp.NextPage == 0 {
+			// hit end of list
+			return false, nil
+		}
+		// otherwise, continue to the next page
+		opt.Page = resp.NextPage
 	}
-	return false, nil
 }
 
 // Read versions from a .json file

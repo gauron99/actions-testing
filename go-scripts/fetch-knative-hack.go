@@ -238,7 +238,7 @@ func writeVersionsScript(v Versions, filename string) error {
 func prepareBranch(branchName string) error {
 	fmt.Println("> prepare branch...")
 	cmd := exec.Command("bash", "-c", fmt.Sprintf(`
-		git config --local user.email "david.fridrich19@gmail.com" &&
+		git config --local user.email "fridrich.david19@gmail.com" &&
 		git config --local user.name "David Fridrich" &&
 		git switch -c %s &&
 		git add %s %s &&
@@ -246,12 +246,9 @@ func prepareBranch(branchName string) error {
 		git push --set-upstream origin %s
 	`, branchName, file, fileJson, branchName))
 
-	// cmd.Stderr = os.Stderr
-	// cmd.Stdout = os.Stdout
-	o, err := cmd.CombinedOutput()
-	fmt.Printf("output: %v\n", string(o))
-	fmt.Println("ready")
-	return err
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	return cmd.Run()
 }
 
 // create a PR for the new updates

@@ -87,7 +87,9 @@ func main() {
 			fmt.Fprintf(os.Stderr, "error while getting latest v of %s/%s: %v\n", p.owner, p.repo, err)
 			os.Exit(1)
 		}
-		updated = updateVersion(&v, p.repo, newV)
+		if updateVersion(&v, p.repo, newV) {
+			updated = true
+		}
 	}
 
 	if !updated {
@@ -138,18 +140,26 @@ func getLatestVersion(ctx context.Context, client *github.Client, owner string, 
 // returns true when PR with given title already exists in knative/func repo
 // otherwise false. Returns an error if occured, otherwise nil.
 func prExists(ctx context.Context, c *github.Client, title string) (bool, error) {
-	opt := &github.PullRequestListOptions{State: "open"}
-	list, _, err := c.PullRequests.List(ctx, "gauron99", "actions-testing", opt)
-	if err != nil {
-		return false, fmt.Errorf("errror pulling PRs in knative/func: %s", err)
-	}
-	for _, pr := range list {
-		if pr.GetTitle() == title {
-			// gauron99 - currently cannot update already existing PR, shouldnt happen
-			return true, nil
+	perPage := 10
+	opt := &github.PullRequestListOptions{State: "open", ListOptions: github.ListOptions{PerPage: perPage}}
+	for {
+		list, resp, err := c.PullRequests.List(ctx, "gauron99", "actions-testing", opt)
+		if err != nil {
+			return false, fmt.Errorf("errror pulling PRs in knative/func: %s", err)
 		}
+		for _, pr := range list {
+			if pr.GetTitle() == title {
+				// gauron99 - currently cannot update already existing PR
+				return true, nil
+			}
+		}
+		if resp.NextPage == 0 {
+			// hit end of list
+			return false, nil
+		}
+		// otherwise, continue to the next page
+		opt.Page = resp.NextPage
 	}
-	return false, nil
 }
 
 // Read versions from a .json file
@@ -235,21 +245,17 @@ func writeVersionsScript(v Versions, filename string) error {
 func prepareBranch(branchName string) error {
 	fmt.Println("> prepare branch...")
 	cmd := exec.Command("bash", "-c", fmt.Sprintf(`
-		git config --local user.email "david.fridrich19@gmail.com" &&
+		git config --local user.email "fridrich.david19@gmail.com" &&
 		git config --local user.name "David Fridrich" &&
 		git switch -c %s &&
-		git status &&
 		git add %s %s &&
 		git commit -m "update components" &&
 		git push --set-upstream origin %s
 	`, branchName, file, fileJson, branchName))
 
-	// cmd.Stderr = os.Stderr
-	// cmd.Stdout = os.Stdout
-	o, err := cmd.CombinedOutput()
-	fmt.Printf("output: %v\n", string(o))
-	fmt.Println("ready")
-	return err
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	return cmd.Run()
 }
 
 // create a PR for the new updates

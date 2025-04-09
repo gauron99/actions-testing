@@ -1,0 +1,22 @@
+name: Go test with codecov
+on: [pull-request]
+jobs:
+  test:
+    name: Unit Test
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          version: 1.24
+      - name: Run test
+        run: go test -race -cover=coverage.txt ./...
+  upload-coverage:
+    needs: [test]
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: codecov/codecov-action@v5
+        with:
+          files: coverage.txt
+

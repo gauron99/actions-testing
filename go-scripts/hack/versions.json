@@ -1,5 +1,5 @@
 {
-	"Serving": "v1.13.0",
-	"Eventing": "v1.12.2",
+	"Serving": "v1.17.0",
+	"Eventing": "v1.17.4",
 	"Contour": "v1.17.0"
 }

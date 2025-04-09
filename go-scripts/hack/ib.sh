@@ -4,6 +4,6 @@
 
 set_versions() {
 	knative_serving_version="v1.17.0"
-	knative_eventing_version="v1.15.2"
-	contour_version="v1.12.0"
+	knative_eventing_version="v1.17.4"
+	contour_version="v1.17.0"
 }

@@ -1,5 +1,5 @@
 name: Go test with codecov
-on: [pull-request]
+on: ['pull-request']
 jobs:
   test:
     name: Unit Test

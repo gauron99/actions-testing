@@ -15,14 +15,6 @@ jobs:
         run: |
           cd testcodecov
           go test -race -cover -coverprofile=coverage.txt ./...
-          ls -lR
-  upload-coverage:
-    needs: [test]
-    runs-on: "ubuntu-latest"
-    steps:
-      - uses: actions/checkout@v4
-      - name: check files
-        run: ls -lR
       - uses: codecov/codecov-action@v5
         with:
           files: testcodecov/coverage.txt"

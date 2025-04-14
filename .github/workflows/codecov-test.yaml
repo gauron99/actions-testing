@@ -18,5 +18,5 @@ jobs:
       - uses: codecov/codecov-action@v5
         with:
           files: testcodecov/coverage.txt"
-          use_oicd: true
+          use_oidc: true
 

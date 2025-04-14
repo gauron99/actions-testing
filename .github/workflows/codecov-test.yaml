@@ -17,6 +17,7 @@ jobs:
           go test -race -cover -coverprofile=coverage.txt ./...
       - uses: codecov/codecov-action@v5
         with:
-          files: testcodecov/coverage.txt"
+          files: testcodecov/coverage.txt
           use_oidc: true
+          verbose: true
 

@@ -1,4 +1,4 @@
 codecov:
-  branch:
+  branches:
     ignore:
       - "update-components*"

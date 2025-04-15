@@ -3,4 +3,5 @@ codecov:
     project:
       default:
         branches:
-          - !codecov
+          ignore:
+          - codecov

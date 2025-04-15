@@ -29,3 +29,41 @@ func TestAdd(t *testing.T) {
 		})
 	}
 }
+
+func TestSub(t *testing.T) {
+	tests := []struct{
+		a int
+		b int
+		exp int
+	}{
+		{
+			a: 10,
+			b: 2,
+			exp: 8,
+		},
+	}
+	for _,tt := range tests {
+		t.Run("test int subs", func(t *testing.T){
+			exp:= tt.exp
+			got := Minus(tt.a,tt.b)
+			if exp != got {
+				t.Errorf("got %v, expected %v",got,exp)
+			}
+		})
+	}
+}
+
+
+
+
+
+			
+
+
+
+
+
+
+
+
+			}

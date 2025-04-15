@@ -1,6 +1,6 @@
 codecov:
-  status:
-    project:
-      default:
-        branches:
-          - hack-dir
+#  status:
+#    project:
+#      default:
+#        branches:
+#          - codecov

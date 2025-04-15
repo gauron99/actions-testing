@@ -1,7 +1,0 @@
-codecov:
-  status:
-    project:
-      default:
-        branches:
-          ignore:
-          - codecov

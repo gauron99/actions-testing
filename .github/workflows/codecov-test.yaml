@@ -21,4 +21,5 @@ jobs:
           disable_search: true
           files: testcodecov/coverage.txt
           verbose: true
+          use_oidc: true
 

@@ -4,7 +4,6 @@ on: [pull_request]
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   test:
@@ -21,7 +20,8 @@ jobs:
           go test -race -cover -coverprofile=coverage.txt ./...
       - uses: codecov/codecov-action@v5
         with:
+          # dont search for files, use precisely the specified ones below
+          disable_search: true
           files: testcodecov/coverage.txt
-          use_oidc: true
           verbose: true
 

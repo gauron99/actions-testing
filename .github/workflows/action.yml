@@ -7,5 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: gauron99/knative-func-action@main
+      with:
+          version: 'knative-v1.18.0'
     - run: func version
 

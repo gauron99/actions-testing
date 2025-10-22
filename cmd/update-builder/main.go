@@ -127,7 +127,6 @@ func buildBuilderImage(ctx context.Context, variant, version, arch, builderTomlP
 				OS:   "linux",
 				Arch: arch,
 			},
-			{OS: "linux"},
 		},
 		BuilderName: newBuilderImageTagged,
 		Config:      builderConfig,
@@ -473,7 +472,7 @@ func buildBuildpackImage(ctx context.Context, bp buildpack, arch string) error {
 		Name:            imageNameTagged,
 		Format:          pack.FormatImage,
 		Config:          cfg,
-		Publish:         false,
+		Publish:         true,
 		PullPolicy:      bpimage.PullAlways,
 		Registry:        "",
 		Flatten:         false,
@@ -483,7 +482,6 @@ func buildBuildpackImage(ctx context.Context, bp buildpack, arch string) error {
 				OS:   "linux",
 				Arch: arch,
 			},
-			{OS: "linux"},
 		},
 	}
 	packClient, err := pack.NewClient(pack.WithKeychain(DefaultKeychain))

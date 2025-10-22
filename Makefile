@@ -3,4 +3,4 @@
 all:
 
 create-builder:
-	cd cmd/update-builder && go run main.go
+	cmd/update-builder/main.go

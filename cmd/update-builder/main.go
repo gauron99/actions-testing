@@ -473,7 +473,7 @@ func buildBuildpackImage(ctx context.Context, bp buildpack, arch string) error {
 		Name:            imageNameTagged,
 		Format:          pack.FormatImage,
 		Config:          cfg,
-		Publish:         true,
+		Publish:         false,
 		PullPolicy:      bpimage.PullAlways,
 		Registry:        "",
 		Flatten:         false,

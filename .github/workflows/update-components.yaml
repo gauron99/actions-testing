@@ -1,0 +1,19 @@
+name: Update kn components
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on: workflow_dispatch
+
+jobs:
+  update:
+    name: Update components
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v6
+    - name: Run script
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: cd go-scripts && go run fetch-knative-hack.go

@@ -262,12 +262,8 @@ func createOrUpdatePR(ctx context.Context, client *github.Client) error {
 		}
 	}
 
-	// construct the branch name to search for since its constant
-	head := fmt.Sprintf("gauron99/actions-testing:%s", branchName)
-	fmt.Printf("head for branch: '%s'", head)
-
 	fmt.Println("checking for existing PR...")
-	pr, err := findPRByBranch(ctx, client, owner, repo, head)
+	pr, err := findPRByBranch(ctx, client, owner, repo, branchName)
 	if err != nil {
 		return fmt.Errorf("failed to check for existing PR: %w", err)
 	}
@@ -297,10 +293,10 @@ func createOrUpdatePR(ctx context.Context, client *github.Client) error {
 }
 
 // findPRByBranch searches for an existing PR with the given head branch
-func findPRByBranch(ctx context.Context, client *github.Client, owner, repo, head string) (*github.PullRequest, error) {
+func findPRByBranch(ctx context.Context, client *github.Client, owner, repo, branch string) (*github.PullRequest, error) {
 	opts := &github.PullRequestListOptions{
 		State: "open",
-		Head:  head, // Filter by head branch (format: "user:branch")
+		Head:  branch,
 		ListOptions: github.ListOptions{
 			PerPage: 100,
 		},

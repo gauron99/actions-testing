@@ -371,7 +371,7 @@ func ensurePR(ctx context.Context, client *github.Client, owner, repo, branchNam
 func findPRByBranch(ctx context.Context, client *github.Client, owner, repo, branch string) (*github.PullRequest, error) {
 	opts := &github.PullRequestListOptions{
 		State: "open",
-		Head:  branch, // branch is local so no need for user:name format
+		Head:  fmt.Sprintf("%s:%s", owner, branch), // GitHub API requires owner:branch format
 		ListOptions: github.ListOptions{
 			PerPage: 100,
 		},

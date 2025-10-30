@@ -246,7 +246,7 @@ func createOrUpdatePR(ctx context.Context, client *github.Client) error {
 	setupScript := fmt.Sprintf(`
 		git config user.email "fridrich.david19@gmail.com" && \
 		git config user.name "Big G" && \
-		git switch origin %s || git switch -c %s origin/%s && \
+		git switch origin/%s || git switch -c %s origin/%s && \
 		git add %s %s && \
 		git commit -m "update components"
 	`, branchName, branchName, baseBranch, fileJson, fileScript)

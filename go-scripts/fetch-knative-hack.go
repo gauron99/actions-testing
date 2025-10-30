@@ -31,6 +31,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	github "github.com/google/go-github/v68/github"
@@ -148,8 +149,21 @@ func main() {
 		os.Exit(0)
 	}
 
-	if err := commitAndPushChanges(branchName); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to commit and push: %v\n", err)
+	hasChanges, err := checkForChanges()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to check for changes: %v\n", err)
+		os.Exit(1)
+	}
+
+	if hasChanges {
+		if err := commitChanges(); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to commit: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	if err := pushChanges(branchName); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to push: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -270,22 +284,42 @@ func setupAndRebaseBranch(branchName, baseBranch string) error {
 	return nil
 }
 
-func commitAndPushChanges(branchName string) error {
+// checkForChanges checks if there are any uncommitted changes in the working directory
+func checkForChanges() (bool, error) {
+	fmt.Println("checking for changes...")
+	cmd := exec.Command("git", "status", "--porcelain")
+	output, err := cmd.Output()
+	if err != nil {
+		return false, fmt.Errorf("failed to check git status: %w", err)
+	}
+
+	hasChanges := len(strings.TrimSpace(string(output))) > 0
+	if hasChanges {
+		fmt.Println("changes detected")
+	} else {
+		fmt.Println("no changes detected")
+	}
+	return hasChanges, nil
+}
+
+// commitChanges adds and commits changes
+func commitChanges() error {
 	fmt.Println("committing changes...")
+
 	commitScript := fmt.Sprintf(`
 		git add %s %s && \
-		git commit -m "update components" && \
-		git push -f --set-upstream origin %s
-	`, fileJson, fileScript, branchName)
+		git commit -m "update components"
+	`, fileJson, fileScript)
 
 	if err := runCommand("sh", "-c", commitScript); err != nil {
-		return fmt.Errorf("failed to commit&push: %w", err)
+		return fmt.Errorf("failed to commit: %w", err)
 	}
-	fmt.Println("done")
+
+	fmt.Println("changes committed")
 	return nil
 }
 
-// pushChanges pushes changes to the remote branch
+// pushChanges pushes changes to the remote branch (force push since we rebased)
 func pushChanges(branchName string) error {
 	fmt.Println("pushing changes...")
 

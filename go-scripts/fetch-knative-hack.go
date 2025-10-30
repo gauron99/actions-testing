@@ -109,14 +109,29 @@ func main() {
 		os.Exit(1)
 	}
 
-	// update componentList in-situ
+	// update components in struct
 	updated, err := update(ctx, client, &componentList)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to update %v\n", err)
 		os.Exit(1)
 	}
 
-	// Always write files (for both component updates and .sh regeneration)
+	const (
+		branchName = "bot-auto-update-components"
+		owner      = "gauron99"
+		repo       = "actions-testing"
+		baseBranch = "main"
+	)
+
+	// (optional) setup git branch
+	if !*localMode {
+		if err := setupGitAndCheckoutBranch(branchName, baseBranch); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to setup git and checkout branch: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	// write files to disk (might be just regenerating .sh)
 	if err := writeFiles(componentList, fileScript, fileJson); err != nil {
 		err = fmt.Errorf("failed to write files: %v", err)
 		fmt.Fprintln(os.Stderr, err)
@@ -130,11 +145,28 @@ func main() {
 	}
 
 	if *localMode {
-		fmt.Println("local mode: skipping PR creation")
+		fmt.Println("local mode: exiting after writing files")
 		os.Exit(0)
 	}
 
-	if err := createOrUpdatePR(ctx, client); err != nil {
+	// dont force push unnecessarily to avoid re-runing PR checks
+	hasChanges, err := checkForChanges()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to check for changes: %v\n", err)
+		os.Exit(1)
+	}
+
+	if !hasChanges {
+		fmt.Println("no changes to commit")
+		os.Exit(0)
+	}
+
+	if err := commitAndPush(branchName); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to commit and push: %v\n", err)
+		os.Exit(1)
+	}
+
+	if err := ensurePR(ctx, client, owner, repo, branchName, baseBranch); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to create or update PR: %v\n", err)
 		os.Exit(1)
 	}
@@ -233,37 +265,61 @@ func writeScript(cl ComponentList, file string) error {
 	return nil
 }
 
-// createOrUpdatePR handles git operations and PR creation/update
-func createOrUpdatePR(ctx context.Context, client *github.Client) error {
-	const (
-		branchName = "bot-auto-update-components"
-		prTitle    = "chore: update kn components"
-		owner      = "gauron99"
-		repo       = "actions-testing"
-		baseBranch = "main"
-	)
-
+// setupGitAndCheckoutBranch configures git and checks out the working branch
+func setupGitAndCheckoutBranch(branchName, baseBranch string) error {
+	fmt.Println("setting up git and checking out branch...")
 	setupScript := fmt.Sprintf(`
 		git config user.email "fridrich.david19@gmail.com" && \
 		git config user.name "Big G" && \
-		git fetch origin %s && git switch %s || git switch -c %s origin/%s && \
-		git add %s %s && \
-		git commit -m "update components"
-	`, branchName, branchName, branchName, baseBranch, fileJson, fileScript)
+		git fetch origin %s && git switch %s || git switch -c %s origin/%s
+	`, branchName, branchName, branchName, baseBranch)
 
 	if err := runCommand("sh", "-c", setupScript); err != nil {
-		if strings.Contains(err.Error(), "nothing to commit") {
-			fmt.Println("nothing to commit")
-			return nil
-		} else {
-			return fmt.Errorf("failed to run git commands: %w", err)
-		}
+		return fmt.Errorf("failed to setup git and checkout branch: %w", err)
 	}
-	// separate to not blindly force push (dont override manual additional changes)
-	pushScript := fmt.Sprintf(`git push -f --set-upstream origin %s`, branchName)
-	if err := runCommand("sh", "-c", pushScript); err != nil {
-		return fmt.Errorf("failed to git push commands: %w", err)
+	fmt.Printf("checked out branch: %s\n", branchName)
+	return nil
+}
+
+// checkForChanges checks if there are any uncommitted changes in the working directory
+func checkForChanges() (bool, error) {
+	fmt.Println("checking for changes...")
+	cmd := exec.Command("git", "status", "--porcelain")
+	output, err := cmd.Output()
+	if err != nil {
+		return false, fmt.Errorf("failed to check git status: %w", err)
 	}
+
+	hasChanges := len(strings.TrimSpace(string(output))) > 0
+	if hasChanges {
+		fmt.Println("changes detected")
+	} else {
+		fmt.Println("no changes detected")
+	}
+	return hasChanges, nil
+}
+
+// commitAndPush adds, commits, and pushes changes to the remote branch
+func commitAndPush(branchName string) error {
+	fmt.Println("committing and pushing changes...")
+
+	commitPushScript := fmt.Sprintf(`
+		git add %s %s && \
+		git commit -m "update components" && \
+		git push -f --set-upstream origin %s
+	`, fileJson, fileScript, branchName)
+
+	if err := runCommand("sh", "-c", commitPushScript); err != nil {
+		return fmt.Errorf("failed to commit and push: %w", err)
+	}
+
+	fmt.Println("changes committed and pushed")
+	return nil
+}
+
+// ensurePR checks for an existing PR or creates a new one
+func ensurePR(ctx context.Context, client *github.Client, owner, repo, branchName, baseBranch string) error {
+	const prTitle = "chore: update kn components"
 
 	fmt.Println("checking for existing PR...")
 	pr, err := findPRByBranch(ctx, client, owner, repo, branchName)
@@ -299,7 +355,7 @@ func createOrUpdatePR(ctx context.Context, client *github.Client) error {
 func findPRByBranch(ctx context.Context, client *github.Client, owner, repo, branch string) (*github.PullRequest, error) {
 	opts := &github.PullRequestListOptions{
 		State: "open",
-		Head:  branch,
+		Head:  branch, // branch is local so no need for user:name format
 		ListOptions: github.ListOptions{
 			PerPage: 100,
 		},

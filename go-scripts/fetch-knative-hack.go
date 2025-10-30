@@ -249,7 +249,7 @@ func createOrUpdatePR(ctx context.Context, client *github.Client) error {
 		git fetch origin %s && \
 		git checkout -B %s origin/%s && \
 		git add %s %s && \
-		git commit -m "update components" && \
+		git commit -m "update components"
 	`, baseBranch, branchName, baseBranch, fileJson, fileScript)
 
 	if err := runCommand("sh", "-c", setupScript); err != nil {

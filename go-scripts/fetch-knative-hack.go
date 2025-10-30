@@ -116,6 +116,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	// git workflow with PR setup
 	const (
 		branchName = "bot-auto-update-components"
 		owner      = "gauron99"
@@ -123,15 +124,14 @@ func main() {
 		baseBranch = "main"
 	)
 
-	// (optional) setup git branch
 	if !*localMode {
-		if err := setupGitAndCheckoutBranch(branchName, baseBranch); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to setup git and checkout branch: %v\n", err)
+		// pull main and checkout/rebase branch
+		if err := setupAndRebaseBranch(branchName, baseBranch); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to setup and rebase branch: %v\n", err)
 			os.Exit(1)
 		}
 	}
-
-	// write files to disk (might be just regenerating .sh)
+	// write files to disk
 	if err := writeFiles(componentList, fileScript, fileJson); err != nil {
 		err = fmt.Errorf("failed to write files: %v", err)
 		fmt.Fprintln(os.Stderr, err)
@@ -145,23 +145,11 @@ func main() {
 	}
 
 	if *localMode {
-		fmt.Println("local mode: exiting after writing files")
+		fmt.Println("local update done")
 		os.Exit(0)
 	}
 
-	// dont force push unnecessarily to avoid re-runing PR checks
-	hasChanges, err := checkForChanges()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to check for changes: %v\n", err)
-		os.Exit(1)
-	}
-
-	if !hasChanges {
-		fmt.Println("no changes to commit")
-		os.Exit(0)
-	}
-
-	if err := commitAndPush(branchName); err != nil {
+	if err := commitAndPushChanges(branchName); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to commit and push: %v\n", err)
 		os.Exit(1)
 	}
@@ -265,55 +253,50 @@ func writeScript(cl ComponentList, file string) error {
 	return nil
 }
 
-// setupGitAndCheckoutBranch configures git and checks out the working branch
-func setupGitAndCheckoutBranch(branchName, baseBranch string) error {
-	fmt.Println("setting up git and checking out branch...")
+// setupAndRebaseBranch configures git, checks out branch, and pulls with rebase
+func setupAndRebaseBranch(branchName, baseBranch string) error {
+	fmt.Println("setting up git and rebasing branch on main...")
 	setupScript := fmt.Sprintf(`
 		git config user.email "fridrich.david19@gmail.com" && \
 		git config user.name "Big G" && \
-		git fetch origin %s && git switch %s || git switch -c %s origin/%s
-	`, branchName, branchName, branchName, baseBranch)
+		git fetch origin && \
+		(git switch %s || git switch -c %s origin/%s) && \
+		git pull --rebase -X theirs origin %s
+	`, branchName, branchName, baseBranch, baseBranch)
 
 	if err := runCommand("sh", "-c", setupScript); err != nil {
-		return fmt.Errorf("failed to setup git and checkout branch: %w", err)
+		return fmt.Errorf("failed to setup and rebase branch: %w", err)
 	}
-	fmt.Printf("checked out branch: %s\n", branchName)
+	fmt.Printf("branch %s rebased on %s\n", branchName, baseBranch)
 	return nil
 }
 
-// checkForChanges checks if there are any uncommitted changes in the working directory
-func checkForChanges() (bool, error) {
-	fmt.Println("checking for changes...")
-	cmd := exec.Command("git", "status", "--porcelain")
-	output, err := cmd.Output()
-	if err != nil {
-		return false, fmt.Errorf("failed to check git status: %w", err)
-	}
-
-	hasChanges := len(strings.TrimSpace(string(output))) > 0
-	if hasChanges {
-		fmt.Println("changes detected")
-	} else {
-		fmt.Println("no changes detected")
-	}
-	return hasChanges, nil
-}
-
-// commitAndPush adds, commits, and pushes changes to the remote branch
-func commitAndPush(branchName string) error {
-	fmt.Println("committing and pushing changes...")
-
-	commitPushScript := fmt.Sprintf(`
+func commitAndPushChanges(branchName string) error {
+	fmt.Println("committing changes...")
+	commitScript := fmt.Sprintf(`
 		git add %s %s && \
 		git commit -m "update components" && \
 		git push -f --set-upstream origin %s
 	`, fileJson, fileScript, branchName)
 
-	if err := runCommand("sh", "-c", commitPushScript); err != nil {
-		return fmt.Errorf("failed to commit and push: %w", err)
+	if err := runCommand("sh", "-c", commitScript); err != nil {
+		return fmt.Errorf("failed to commit&push: %w", err)
+	}
+	fmt.Println("done")
+	return nil
+}
+
+// pushChanges pushes changes to the remote branch
+func pushChanges(branchName string) error {
+	fmt.Println("pushing changes...")
+
+	pushScript := fmt.Sprintf(`git push -f --set-upstream origin %s`, branchName)
+
+	if err := runCommand("sh", "-c", pushScript); err != nil {
+		return fmt.Errorf("failed to push: %w", err)
 	}
 
-	fmt.Println("changes committed and pushed")
+	fmt.Println("changes pushed")
 	return nil
 }
 

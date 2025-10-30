@@ -264,6 +264,7 @@ func createOrUpdatePR(ctx context.Context, client *github.Client) error {
 
 	// construct the branch name to search for since its constant
 	head := fmt.Sprintf("gauron99/actions-testing:%s", branchName)
+	fmt.Printf("head for branch: '%s'", head)
 
 	fmt.Println("checking for existing PR...")
 	pr, err := findPRByBranch(ctx, client, owner, repo, head)
@@ -281,7 +282,7 @@ func createOrUpdatePR(ctx context.Context, client *github.Client) error {
 	prBody := "you most likely need to close&re-open the PR for tests to run properly\n/assign gauron99"
 	newPR := &github.NewPullRequest{
 		Title: github.Ptr(prTitle),
-		Head:  github.Ptr(head),
+		Head:  github.Ptr(branchName),
 		Base:  github.Ptr(baseBranch),
 		Body:  github.Ptr(prBody),
 	}

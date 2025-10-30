@@ -38,8 +38,8 @@ import (
 )
 
 const (
-	fileScript string = "versions.sh"
-	fileJson   string = "versions.json"
+	fileScript string = "hack/versions.sh"
+	fileJson   string = "hack/versions.json"
 
 	versionsScriptTemplate string = `#!/usr/bin/env bash
 

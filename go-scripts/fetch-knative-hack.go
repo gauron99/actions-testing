@@ -246,10 +246,10 @@ func createOrUpdatePR(ctx context.Context, client *github.Client) error {
 	setupScript := fmt.Sprintf(`
 		git config user.email "fridrich.david19@gmail.com" && \
 		git config user.name "Big G" && \
-		git switch origin/%s || git switch -c %s origin/%s && \
+		git fetch origin %s && git switch %s || git switch -c %s origin/%s && \
 		git add %s %s && \
 		git commit -m "update components"
-	`, branchName, branchName, baseBranch, fileJson, fileScript)
+	`, branchName, branchName, branchName, baseBranch, fileJson, fileScript)
 
 	if err := runCommand("sh", "-c", setupScript); err != nil {
 		if strings.Contains(err.Error(), "nothing to commit") {

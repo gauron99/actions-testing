@@ -31,7 +31,6 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	github "github.com/google/go-github/v68/github"

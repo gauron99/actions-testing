@@ -250,8 +250,7 @@ func createOrUpdatePR(ctx context.Context, client *github.Client) error {
 		git checkout -B %s origin/%s && \
 		git add %s %s && \
 		git commit -m "update components" && \
-		git push -f --set-upstream origin %s
-	`, baseBranch, branchName, baseBranch, fileJson, fileScript, branchName)
+	`, baseBranch, branchName, baseBranch, fileJson, fileScript)
 
 	if err := runCommand("sh", "-c", setupScript); err != nil {
 		if strings.Contains(err.Error(), "nothing to commit") {
@@ -260,6 +259,11 @@ func createOrUpdatePR(ctx context.Context, client *github.Client) error {
 		} else {
 			return fmt.Errorf("failed to run git commands: %w", err)
 		}
+	}
+	// separate to not blindly force push (dont override manual additional changes)
+	pushScript := fmt.Sprintf(`git push -f --set-upstream origin %s`, branchName)
+	if err := runCommand("sh", "-c", pushScript); err != nil {
+		return fmt.Errorf("failed to git push commands: %w", err)
 	}
 
 	fmt.Println("checking for existing PR...")

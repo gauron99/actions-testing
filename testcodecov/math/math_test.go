@@ -53,8 +53,28 @@ func TestSub(t *testing.T) {
 	}
 }
 
+func TestMul(t *testing.T) {
+	tests := []struct{
+		a int
+		b int
+		exp int
+	}{
+		{
+			a: 10,
+			b: 2,
+			exp: 20,
+		},
+	}
+	for _,tt := range tests {
+		t.Run("test int multiplication", func(t *testing.T){
+			exp:= tt.exp
+			got := Times(tt.a,tt.b)
+			if exp != got {
+				t.Errorf("got %v, expected %v",got,exp)
+			}
+		})
+	}
+}
 
 
 
-
-			
